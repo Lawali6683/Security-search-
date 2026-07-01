@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>DSS Bank Account Intelligence System v2.0</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#0a0e17;color:#e0e6ed;min-height:100vh}
+.container{max-width:1400px;margin:0 auto;padding:20px}
+.header{background:linear-gradient(135deg,#0d1117 0%,#161b22 100%);border-bottom:1px solid #30363d;padding:15px 0;position:sticky;top:0;z-index:100}
+.header-content{display:flex;align-items:center;justify-content:space-between;max-width:1400px;margin:0 auto;padding:0 20px}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-icon{width:40px;height:40px;background:linear-gradient(135deg,#58a6ff,#1f6feb);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:bold}
+.logo-text{font-size:20px;font-weight:600;background:linear-gradient(135deg,#58a6ff,#79c0ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header-badge{background:#21262d;border:1px solid #30363d;border-radius:6px;padding:6px 12px;font-size:12px;color:#8b949e}
+.search-section{background:linear-gradient(135deg,#161b22 0%,#1c2128 100%);border:1px solid #30363d;border-radius:12px;padding:30px;margin:20px 0}
+.search-title{font-size:18px;font-weight:600;margin-bottom:20px;color:#c9d1d9}
+.search-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.search-row.single{grid-template-columns:1fr}
+.search-input{padding:14px 18px;background:#0d1117;border:2px solid #30363d;border-radius:8px;color:#e0e6ed;font-size:16px;transition:all 0.3s;width:100%}
+.search-input:focus{border-color:#58a6ff;outline:none;box-shadow:0 0 0 3px rgba(88,166,255,0.15)}
+.search-btn{padding:14px 32px;background:linear-gradient(135deg,#1f6feb,#388bfd);border:none;border-radius:8px;color:#fff;font-size:16px;font-weight:600;cursor:pointer;transition:all 0.3s;width:100%}
+.search-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(56,139,253,0.3)}
+.search-btn:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+.password-hint{font-size:11px;color:#484f58;margin-top:8px;font-family:monospace}
+.search-method{display:flex;gap:8px;margin-bottom:16px}
+.method-btn{padding:8px 18px;border-radius:6px;border:1px solid #30363d;background:#0d1117;color:#8b949e;font-size:13px;cursor:pointer;transition:all 0.2s}
+.method-btn:hover{border-color:#58a6ff;color:#58a6ff}
+.method-btn.active{background:rgba(88,166,255,0.15);border-color:#58a6ff;color:#58a6ff}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:20px 0}
+.stat-card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px}
+.stat-label{font-size:12px;color:#8b949e;text-transform:uppercase;letter-spacing:0.5px}
+.stat-value{font-size:24px;font-weight:700;color:#c9d1d9;margin-top:4px}
+.stat-value.active{color:#3fb950}
+.stat-value.error{color:#f85149}
+.stat-value.warning{color:#d29922}
+.stat-value.amount{color:#58a6ff}
+.results-container{display:none}
+.results-container.active{display:block}
+.results-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.results-title{font-size:18px;font-weight:600;color:#c9d1d9}
+.results-actions{display:flex;gap:8px}
+.action-btn{padding:8px 16px;border-radius:6px;border:1px solid #30363d;background:#21262d;color:#c9d1d9;font-size:13px;cursor:pointer;transition:all 0.2s}
+.action-btn:hover{background:#30363d}
+.action-btn.primary{background:#1f6feb;border-color:#1f6feb;color:#fff}
+.action-btn.primary:hover{background:#388bfd}
+.action-btn.danger{background:#da3633;border-color:#da3633;color:#fff}
+.action-btn.danger:hover{background:#f85149}
+.api-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:12px;margin-bottom:20px}
+.api-card{background:#161b22;border:1px solid #30363d;border-radius:8px;overflow:hidden;transition:all 0.3s}
+.api-card:hover{border-color:#58a6ff}
+.api-card.positive{background:rgba(63,185,80,0.05);border-color:#3fb950}
+.api-card.negative{background:rgba(248,81,73,0.05);border-color:#f85149}
+.api-card-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #30363d;cursor:pointer}
+.api-card-header h3{font-size:14px;font-weight:600;color:#c9d1d9;display:flex;align-items:center;gap:8px}
+.api-card-header .bank-code{font-size:10px;padding:2px 6px;border-radius:4px;background:#21262d;color:#8b949e}
+.api-card-header .badge{font-size:10px;padding:2px 8px;border-radius:10px;background:#21262d;color:#8b949e;margin-left:8px}
+.api-card-header .badge.found{background:rgba(63,185,80,0.2);color:#3fb950}
+.api-card-header .badge.not-found{background:rgba(248,81,73,0.2);color:#f85149}
+.api-status{width:8px;height:8px;border-radius:50%}
+.api-status.success{background:#3fb950;box-shadow:0 0 6px rgba(63,185,80,0.4)}
+.api-status.error{background:#f85149;box-shadow:0 0 6px rgba(248,81,73,0.4)}
+.api-status.loading{background:#d29922;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.api-card-body{padding:16px;display:none}
+.api-card-body.active{display:block}
+.api-data{padding:12px;background:#0d1117;border-radius:6px;font-family:monospace;font-size:12px;line-height:1.6;color:#8b949e;white-space:pre-wrap;word-break:break-word;max-height:200px;overflow-y:auto}
+.api-data.highlight{color:#c9d1d9}
+.api-data.amount{color:#58a6ff;font-size:18px;font-weight:700}
+.account-summary{background:linear-gradient(135deg,#161b22,#1c2128);border:1px solid #58a6ff;border-radius:12px;padding:24px;margin:16px 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
+.account-summary .item{text-align:center}
+.account-summary .item .label{font-size:11px;color:#484f58;text-transform:uppercase}
+.account-summary .item .value{font-size:22px;font-weight:700;color:#c9d1d9;margin-top:4px}
+.account-summary .item .value.positive{color:#3fb950}
+.account-summary .item .value.negative{color:#f85149}
+.transaction-item{padding:10px 14px;background:#0d1117;border-left:3px solid #30363d;margin-bottom:6px;border-radius:0 4px 4px 0;display:flex;justify-content:space-between;align-items:center}
+.transaction-item.credit{border-left-color:#3fb950}
+.transaction-item.debit{border-left-color:#f85149}
+.transaction-item .txn-date{font-size:11px;color:#484f58}
+.transaction-item .txn-desc{font-size:12px;color:#c9d1d9;flex:1;margin:0 12px}
+.transaction-item .txn-amount{font-size:13px;font-weight:600}
+.transaction-item .txn-amount.credit{color:#3fb950}
+.transaction-item .txn-amount.debit{color:#f85149}
+.transaction-item .txn-status{font-size:10px;padding:2px 6px;border-radius:4px}
+.transaction-item .txn-status.success{background:rgba(63,185,80,0.2);color:#3fb950}
+.summary-section{background:linear-gradient(135deg,#161b22,#1c2128);border:1px solid #30363d;border-radius:12px;padding:24px;margin:20px 0}
+.summary-title{font-size:18px;font-weight:600;margin-bottom:16px;color:#c9d1d9}
+.summary-content{font-size:14px;line-height:1.8;color:#8b949e}
+.summary-content strong{color:#c9d1d9}
+.language-selector{display:flex;gap:8px;margin:16px 0}
+.lang-btn{padding:6px 14px;border-radius:4px;border:1px solid #30363d;background:transparent;color:#8b949e;font-size:12px;cursor:pointer;transition:all 0.2s}
+.lang-btn:hover{border-color:#58a6ff;color:#58a6ff}
+.lang-btn.active{background:#1f6feb;border-color:#1f6feb;color:#fff}
+.tab-container{margin:20px 0}
+.tab-buttons{display:flex;gap:4px;margin-bottom:16px;overflow-x:auto}
+.tab-btn{padding:10px 20px;border:1px solid #30363d;background:#0d1117;color:#8b949e;font-size:13px;cursor:pointer;border-radius:8px 8px 0 0;transition:all 0.2s;white-space:nowrap}
+.tab-btn.active{background:#161b22;color:#c9d1d9;border-bottom-color:#161b22;border-top-color:#58a6ff}
+.tab-btn:hover{background:#1c2128}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.map-container{height:400px;border-radius:8px;overflow:hidden;border:1px solid #30363d;margin:16px 0;display:none}
+.map-container.active{display:block}
+@media(max-width:768px){.search-row{grid-template-columns:1fr}.api-grid{grid-template-columns:1fr}.tab-buttons{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+
+<div class="header">
+<div class="header-content">
+<div class="logo">
+<div class="logo-icon">B</div>
+<div class="logo-text">DSS Bank Account Intelligence v2.0</div>
+</div>
+<div class="header-badge">SECURE • AUTHORIZED ACCESS ONLY</div>
+</div>
+</div>
+
+<div class="container">
+
+<div class="search-section">
+<div class="search-title">Bank Account Financial Intelligence Search</div>
+<div class="search-method" id="searchMethod">
+<button class="method-btn active" data-method="account" onclick="selectMethod('account')">🔢 Account Number</button>
+</div>
+<div class="search-row" id="accountSearch">
+<div><input type="text" class="search-input" id="accountInput" placeholder="Account Number (10 digits)"></div>
+<div>
+<select class="search-input" id="bankSelect">
+<option value="">Select Bank</option>
+<option value="zenith">Zenith Bank (057)</option>
+<option value="gtbank">GTBank (058)</option>
+<option value="access">Access Bank (044)</option>
+<option value="uba">UBA (033)</option>
+<option value="firstbank">FirstBank (011)</option>
+<option value="fidelity">Fidelity Bank (070)</option>
+<option value="union">Union Bank (032)</option>
+<option value="ecobank">Ecobank (050)</option>
+<option value="stanbic">Stanbic IBTC (221)</option>
+<option value="polaris">Polaris Bank (076)</option>
+<option value="sterling">Sterling Bank (232)</option>
+<option value="wema">Wema Bank (035)</option>
+<option value="providus">Providus (101)</option>
+<option value="titan">Titan Trust (102)</option>
+<option value="globus">Globus Bank (001)</option>
+</select>
+</div>
+</div>
+<div class="search-row single" id="bvnSearch" style="display:none">
+<div><input type="text" class="search-input" id="bvnInput" placeholder="Enter BVN (11 digits)"></div>
+</div>
+<div class="search-row single" id="phoneSearch" style="display:none">
+<div><input type="text" class="search-input" id="phoneInput" placeholder="Phone Number (e.g., 2348012345678)"></div>
+</div>
+<button class="search-btn" id="searchBtn" onclick="startInvestigation()">🔍 Begin Investigation</button>
+<div class="password-hint">Authentication: @dss/v1 • All requests are encrypted and logged</div>
+</div>
+
+<div class="stats-grid" id="statsGrid" style="display:none">
+<div class="stat-card"><div class="stat-label">Banks Queried</div><div class="stat-value" id="totalApis">0</div></div>
+<div class="stat-card"><div class="stat-label">Accounts Found</div><div class="stat-value active" id="accountsFound">0</div></div>
+<div class="stat-card"><div class="stat-label">Total Balance</div><div class="stat-value amount" id="totalBalance">₦0</div></div>
+<div class="stat-card"><div class="stat-label">Transactions</div><div class="stat-value warning" id="txnCount">0</div></div>
+<div class="stat-card"><div class="stat-label">Failed</div><div class="stat-value error" id="failCount">0</div></div>
+</div>
+
+<div class="results-container" id="resultsContainer">
+<div class="results-header">
+<div class="results-title">Account Intelligence Report: <span id="targetAccount" style="color:#58a6ff"></span></div>
+<div class="results-actions">
+<button class="action-btn" onclick="generatePDF()">📄 Export PDF</button>
+<button class="action-btn" onclick="downloadJSON()">💾 Download JSON</button>
+<button class="action-btn danger" onclick="clearResults()">🗑 Clear All</button>
+</div>
+</div>
+
+<div class="language-selector" id="languageSelector">
+<button class="lang-btn active" onclick="setLanguage('english')">English</button>
+<button class="lang-btn" onclick="setLanguage('hausa')">Hausa</button>
+<button class="lang-btn" onclick="setLanguage('pidgin')">Pidgin</button>
+</div>
+
+<div id="accountSummary" class="account-summary" style="display:none"></div>
+
+<div class="tab-container">
+<div class="tab-buttons">
+<button class="tab-btn active" onclick="switchTab('balance')">💰 Balance & Status</button>
+<button class="tab-btn" onclick="switchTab('transactions')">📊 Transactions</button>
+<button class="tab-btn" onclick="switchTab('name')">👤 Name Inquiry</button>
+<button class="tab-btn" onclick="switchTab('bvn_accounts')">🔗 BVN Accounts</button>
+</div>
+
+<div class="tab-content active" id="tab-balance"><div id="balanceResults" class="api-grid"></div></div>
+<div class="tab-content" id="tab-transactions"><div id="txnResults" class="api-grid"></div></div>
+<div class="tab-content" id="tab-name"><div id="nameResults" class="api-grid"></div></div>
+<div class="tab-content" id="tab-bvn_accounts"><div id="bvnAccountsResults" class="api-grid"></div></div>
+</div>
+
+<div class="map-container" id="mapContainer">
+<iframe id="mapFrame" width="100%" height="100%" frameborder="0" style="border:0" allowfullscreen></iframe>
+</div>
+
+<div class="summary-section">
+<div class="summary-title">📋 Financial Intelligence Summary</div>
+<div class="summary-content" id="summaryContent">No data available yet. Run an investigation to generate summary.</div>
+</div>
+</div>
+
+</div>
+
+<div class="modal" id="loadingModal">
+<div class="modal-content">
+<div class="modal-title">🔍 Investigation in Progress</div>
+<div class="loading-spinner"><div class="spinner"></div></div>
+<p style="text-align:center;color:#8b949e" id="loadingStatus">Querying bank APIs and financial databases...</p>
+</div>
+</div>
+
+<style>
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center}
+.modal.active{display:flex}
+.modal-content{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:30px;max-width:400px;width:90%}
+.modal-title{font-size:18px;font-weight:600;color:#c9d1d9;margin-bottom:20px;text-align:center}
+.loading-spinner{display:flex;justify-content:center;margin:20px 0}
+.spinner{width:40px;height:40px;border:3px solid #30363d;border-top-color:#58a6ff;border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+
+<script>
+const API_PASSWORD = '@dss/v1';
+const WORKER_URL = 'https://security.pages.dev/api/bc.js';
+let currentAccount = '';
+let currentBank = '';
+let currentMethod = 'account';
+let allResults = {};
+let language = 'english';
+
+const translations = {
+  english: {
+    searching: 'Querying banks...',
+    success: 'Account Found',
+    fail: 'No Account',
+    balance: 'Balance',
+    transactions: 'Transactions',
+    name: 'Account Name',
+    total: 'Total Balance',
+    risk: 'Risk Level',
+    risk_high: 'HIGH RISK - Suspicious Activity',
+    risk_medium: 'MEDIUM RISK - Review Required',
+    risk_low: 'LOW RISK - Clean',
+    accounts_linked: 'Linked Accounts Found',
+    no_accounts: 'No Linked Accounts'
+  },
+  hausa: {
+    searching: 'Ana bincike...',
+    success: 'An Samu Account',
+    fail: 'Babu Account',
+    balance: 'Kudi',
+    transactions: 'Ma\'amaloli',
+    name: 'Sunan Account',
+    total: 'Jimillar Kudi',
+    risk: 'Matsayin Hadari',
+    risk_high: 'BABBAN HADARI - Ayyuka Masu Shubuha',
+    risk_medium: 'MATSAKAICI HADARI - Ana Bukatar Bincike',
+    risk_low: 'KANANAN HADARI - Babu Matsala',
+    accounts_linked: 'An Samu Linked Accounts',
+    no_accounts: 'Babu Linked Accounts'
+  },
+  pidgin: {
+    searching: 'De check banks...',
+    success: 'Account Dey',
+    fail: 'No Account',
+    balance: 'Balance',
+    transactions: 'Transactions',
+    name: 'Account Name',
+    total: 'Total Money',
+    risk: 'Risk Level',
+    risk_high: 'RISK HIGH - Wahala Dey',
+    risk_medium: 'RISK MEDIUM - Check Am',
+    risk_low: 'RISK LOW - Clean',
+    accounts_linked: 'Linked Accounts Dey',
+    no_accounts: 'No Linked Accounts'
+  }
+};
+
+function t(key) {
+  return translations[language] && translations[language][key] !== undefined ? translations[language][key] : key;
+}
+
+function setLanguage(lang) {
+  language = lang;
+  document.querySelectorAll('.lang-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.querySelector('.lang-btn[onclick="setLanguage(\'' + lang + '\')"]').classList.add('active');
+  if (currentAccount) generateSummary();
+}
+
+function selectMethod(method) {
+  currentMethod = method;
+  document.querySelectorAll('.method-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.querySelector('.method-btn[data-method="' + method + '"]').classList.add('active');
+  document.getElementById('accountSearch').style.display = method === 'account' ? 'grid' : 'none';
+  document.getElementById('bvnSearch').style.display = method === 'bvn' ? 'block' : 'none';
+  document.getElementById('phoneSearch').style.display = method === 'phone' ? 'block' : 'none';
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+  var btns = document.querySelectorAll('.tab-btn');
+  for (var i = 0; i < btns.length; i++) {
+    if (btns[i].getAttribute('onclick') && btns[i].getAttribute('onclick').indexOf("'" + tab + "'") !== -1) {
+      btns[i].classList.add('active');
+      break;
+    }
+  }
+  document.getElementById('tab-' + tab).classList.add('active');
+}
+
+const BANK_CODES = {
+  zenith: '057', gtbank: '058', access: '044', uba: '033', firstbank: '011',
+  fidelity: '070', union: '032', ecobank: '050', stanbic: '221', polaris: '076',
+  sterling: '232', wema: '035', providus: '101', titan: '102', globus: '001'
+};
+
+const API_ENDPOINTS = {
+  balance: [
+    {name:'Zenith Bank Balance',url:'https://zenith-api.com/account/{account}/balance',method:'GET',bank:'zenith',category:'balance'},
+    {name:'GTBank Balance',url:'https://gtbank-api.com/account/{account}/balance',method:'GET',bank:'gtbank',category:'balance'},
+    {name:'Access Bank Balance',url:'https://access-api.com/account/{account}/balance',method:'GET',bank:'access',category:'balance'},
+    {name:'UBA Balance',url:'https://uba-api.com/account/{account}/balance',method:'GET',bank:'uba',category:'balance'},
+    {name:'FirstBank Balance',url:'https://firstbank-api.com/account/{account}/balance',method:'GET',bank:'firstbank',category:'balance'},
+    {name:'Fidelity Balance',url:'https://fidelity-api.com/account/{account}/balance',method:'GET',bank:'fidelity',category:'balance'},
+    {name:'Union Bank Balance',url:'https://union-api.com/account/{account}/balance',method:'GET',bank:'union',category:'balance'},
+    {name:'Ecobank Balance',url:'https://ecobank-api.com/account/{account}/balance',method:'GET',bank:'ecobank',category:'balance'},
+    {name:'Stanbic Balance',url:'https://stanbic-api.com/account/{account}/balance',method:'GET',bank:'stanbic',category:'balance'},
+    {name:'Polaris Balance',url:'https://polaris-api.com/account/{account}/balance',method:'GET',bank:'polaris',category:'balance'}
+  ],
+  transactions: [
+    {name:'Zenith Transactions',url:'https://zenith-api.com/account/{account}/transactions',method:'GET',bank:'zenith',category:'transactions'},
+    {name:'GTBank Transactions',url:'https://gtbank-api.com/account/{account}/transactions',method:'GET',bank:'gtbank',category:'transactions'},
+    {name:'Access Transactions',url:'https://access-api.com/account/{account}/statement',method:'GET',bank:'access',category:'transactions'},
+    {name:'UBA Transactions',url:'https://uba-api.com/account/{account}/history',method:'GET',bank:'uba',category:'transactions'},
+    {name:'FirstBank Transactions',url:'https://firstbank-api.com/account/{account}/transactions',method:'GET',bank:'firstbank',category:'transactions'},
+    {name:'NIBSS Transactions',url:'https://nibss-api.com/account/{account}/transactions',method:'GET',bank:'nibss',category:'transactions'}
+  ],
+  name_inquiry: [
+    {name:'NIBSS Name Inquiry',url:'https://nibss-api.com/name-inquiry?account={account}&bank={bank}',method:'GET',bank:'nibss',category:'name'},
+    {name:'Paystack Name Lookup',url:'https://api.paystack.co/bank/resolve?account_number={account}&bank_code={code}',method:'GET',bank:'paystack',category:'name'},
+    {name:'Flutterwave Name Lookup',url:'https://api.flutterwave.com/v3/accounts/resolve?account_number={account}&bank_code={code}',method:'GET',bank:'flutterwave',category:'name'},
+    {name:'Remita Account Lookup',url:'https://api.remita.net/v1/account/lookup?account={account}',method:'GET',bank:'remita',category:'name'},
+    {name:'Interswitch Enquiry',url:'https://api.interswitchng.com/v1/account/enquiry?account={account}',method:'GET',bank:'interswitch',category:'name'}
+  ],
+  bvn_accounts: [
+    {name:'NIBSS BVN Accounts',url:'https://nibss-api.com/bvn/{bvn}/accounts',method:'GET',bank:'nibss',category:'bvn_accounts'},
+    {name:'BankVerify',url:'https://bankverify.com/bvn/{bvn}',method:'GET',bank:'bankverify',category:'bvn_accounts'},
+    {name:'BVN2Account',url:'https://bvn2account.com/{bvn}',method:'GET',bank:'bvn2account',category:'bvn_accounts'}
+  ]
+};
+
+async function queryAPI(endpoint, account, bankCode) {
+  var url = endpoint.url.replace('{account}', encodeURIComponent(account)).replace('{bank}', bankCode || '').replace('{code}', bankCode || '');
+  if (endpoint.bank === 'bvn_accounts' || endpoint.bank === 'bankverify' || endpoint.bank === 'bvn2account') {
+    url = endpoint.url.replace('{bvn}', encodeURIComponent(account));
+  }
+  var startTime = Date.now();
+  try {
+    var response = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        password: API_PASSWORD,
+        type: 'api',
+        target: url,
+        method: endpoint.method || 'GET',
+        name: endpoint.name,
+        category: endpoint.category,
+        bank: endpoint.bank
+      })
+    });
+    var data = await response.json();
+    return {success: data.success, data: data.data || data, time: Date.now() - startTime};
+  } catch(e) {
+    return {success: false, error: e.message, time: Date.now() - startTime};
+  }
+}
+
+async function startInvestigation() {
+  var query, bankCode = '';
+  if (currentMethod === 'account') {
+    query = document.getElementById('accountInput').value.trim();
+    var bank = document.getElementById('bankSelect').value;
+    if (!query || query.length < 10) { alert('Please enter a valid 10-digit account number'); return; }
+    if (!bank) { alert('Please select a bank'); return; }
+    bankCode = BANK_CODES[bank] || '';
+  } else if (currentMethod === 'bvn') {
+    query = document.getElementById('bvnInput').value.trim();
+    if (!query || query.length !== 11) { alert('Please enter a valid 11-digit BVN'); return; }
+  } else {
+    query = document.getElementById('phoneInput').value.trim();
+    if (!query || query.length < 10) { alert('Please enter a valid phone number'); return; }
+  }
+
+  currentAccount = query;
+  currentBank = bankCode;
+  var bankSelect = document.getElementById('bankSelect');
+  var bankText = bankCode ? '(' + bankSelect.options[bankSelect.selectedIndex].text + ')' : '';
+  document.getElementById('targetAccount').textContent = query + ' ' + bankText;
+  document.getElementById('searchBtn').disabled = true;
+  document.getElementById('searchBtn').textContent = '⏳ Investigating...';
+  document.getElementById('loadingModal').classList.add('active');
+  document.getElementById('resultsContainer').classList.remove('active');
+  document.getElementById('statsGrid').style.display = 'none';
+  document.getElementById('accountSummary').style.display = 'none';
+  allResults = {};
+
+  var total = 0, success = 0, fail = 0, txnCount = 0;
+  var resultsByCategory = {balance: [], transactions: [], name: [], bvn_accounts: []};
+  var totalBalanceAmount = 0;
+
+  var apisToQuery;
+  if (currentMethod === 'bvn') {
+    apisToQuery = API_ENDPOINTS.bvn_accounts;
+  } else if (currentMethod === 'phone') {
+    apisToQuery = API_ENDPOINTS.balance.concat(API_ENDPOINTS.transactions).concat(API_ENDPOINTS.name_inquiry);
+  } else {
+    apisToQuery = API_ENDPOINTS.balance.concat(API_ENDPOINTS.transactions).concat(API_ENDPOINTS.name_inquiry);
+    if (bankCode) {
+      for (var i = 0; i < API_ENDPOINTS.bvn_accounts.length; i++) {
+        var newApi = Object.assign({}, API_ENDPOINTS.bvn_accounts[i]);
+        newApi.url = newApi.url.replace('{bvn}', query);
+        apisToQuery.push(newApi);
+      }
+    }
+  }
+
+  for (var i = 0; i < apisToQuery.length; i++) {
+    var api = apisToQuery[i];
+    total++;
+    document.getElementById('loadingStatus').textContent = 'Querying ' + api.name + '...';
+
+    var result = await queryAPI(api, query, bankCode);
+    if (result.success) {
+      success++;
+      if (result.data) {
+        if (result.data.balance) totalBalanceAmount += parseFloat(result.data.balance) || 0;
+        if (result.data.transactions) txnCount += result.data.transactions.length;
+      }
+    } else {
+      fail++;
+    }
+
+    var cat = api.category || 'balance';
+    if (resultsByCategory[cat]) resultsByCategory[cat].push({name: api.name, result: result, bank: api.bank, category: api.category});
+
+    allResults[api.name] = result;
+
+    document.getElementById('totalApis').textContent = total;
+    document.getElementById('accountsFound').textContent = success;
+    document.getElementById('totalBalance').textContent = '₦' + totalBalanceAmount.toLocaleString();
+    document.getElementById('txnCount').textContent = txnCount;
+    document.getElementById('failCount').textContent = fail;
+  }
+
+  document.getElementById('loadingModal').classList.remove('active');
+  document.getElementById('statsGrid').style.display = 'grid';
+  document.getElementById('resultsContainer').classList.add('active');
+  document.getElementById('searchBtn').disabled = false;
+  document.getElementById('searchBtn').textContent = '🔍 Begin Investigation';
+
+  renderResults('balanceResults', resultsByCategory.balance, 'balance');
+  renderTransactionResults(resultsByCategory.transactions);
+  renderNameResults(resultsByCategory.name);
+  renderResults('bvnAccountsResults', resultsByCategory.bvn_accounts, 'bvn_accounts');
+  renderAccountSummary(resultsByCategory.balance);
+  generateSummary();
+}
+
+function renderResults(containerId, apis, type) {
+  var container = document.getElementById(containerId);
+  container.innerHTML = '';
+  if (!apis || !apis.length) {
+    container.innerHTML = '<div style="color:#484f58;padding:20px;text-align:center">No data available</div>';
+    return;
+  }
+  for (var i = 0; i < apis.length; i++) {
+    var api = apis[i];
+    var card = document.createElement('div');
+    card.className = 'api-card' + (api.result.success ? ' positive' : '');
+    var header = document.createElement('div');
+    header.className = 'api-card-header';
+    header.onclick = function() {
+      this.nextElementSibling.classList.toggle('active');
+    };
+    var badge = document.createElement('span');
+    badge.className = 'badge ' + (api.result.success ? 'found' : 'not-found');
+    badge.textContent = api.result.success ? 'FOUND' : 'NOT FOUND';
+    header.innerHTML = '<h3>' + api.name + '</h3>';
+    header.appendChild(badge);
+    var status = document.createElement('div');
+    status.className = 'api-status ' + (api.result.success ? 'success' : 'error');
+    header.appendChild(status);
+    card.appendChild(header);
+    var body = document.createElement('div');
+    body.className = 'api-card-body';
+    var dataDiv = document.createElement('div');
+    dataDiv.className = 'api-data highlight';
+    if (api.result.success && api.result.data) {
+      var data = api.result.data;
+      if (data.balance) {
+        dataDiv.innerHTML = '<div style="font-size:24px;font-weight:700;color:#58a6ff">₦' + parseFloat(data.balance).toLocaleString() + '</div><div style="font-size:12px;color:#484f58;margin-top:4px">' + (data.currency || 'NGN') + '</div>';
+      } else {
+        dataDiv.textContent = JSON.stringify(data, null, 2);
+      }
+    } else {
+      dataDiv.style.color = '#f85149';
+      dataDiv.textContent = 'No record found: ' + (api.result.error || 'Request failed');
+    }
+    body.appendChild(dataDiv);
+    card.appendChild(body);
+    container.appendChild(card);
+  }
+}
+
+function renderTransactionResults(apis) {
+  var container = document.getElementById('txnResults');
+  container.innerHTML = '';
+  if (!apis || !apis.length) {
+    container.innerHTML = '<div style="color:#484f58;padding:20px;text-align:center">No transaction data available</div>';
+    return;
+  }
+  for (var i = 0; i < apis.length; i++) {
+    var api = apis[i];
+    var card = document.createElement('div');
+    card.className = 'api-card';
+    var header = document.createElement('div');
+    header.className = 'api-card-header';
+    header.onclick = function() {
+      this.nextElementSibling.classList.toggle('active');
+    };
+    header.innerHTML = '<h3>' + api.name + '</h3>';
+    var status = document.createElement('div');
+    status.className = 'api-status ' + (api.result.success ? 'success' : 'error');
+    header.appendChild(status);
+    card.appendChild(header);
+    var body = document.createElement('div');
+    body.className = 'api-card-body';
+    if (api.result.success && api.result.data && api.result.data.transactions) {
+      var txnDiv = document.createElement('div');
+      var txnHtml = '';
+      for (var j = 0; j < api.result.data.transactions.length; j++) {
+        var t = api.result.data.transactions[j];
+        txnHtml += '<div class="transaction-item ' + (t.type === 'credit' ? 'credit' : 'debit') + '">' +
+          '<span class="txn-date">' + (t.date || 'N/A') + '</span>' +
+          '<span class="txn-desc">' + (t.description || t.source || t.destination || 'N/A') + '</span>' +
+          '<span class="txn-amount ' + (t.type === 'credit' ? 'credit' : 'debit') + '">' + (t.type === 'credit' ? '+' : '-') + '₦' + parseFloat(t.amount || 0).toLocaleString() + '</span>' +
+          '<span class="txn-status success">' + (t.status || 'completed') + '</span>' +
+        '</div>';
+      }
+      txnDiv.innerHTML = txnHtml;
+      body.appendChild(txnDiv);
+    } else {
+      var dataDiv = document.createElement('div');
+      dataDiv.className = 'api-data';
+      dataDiv.style.color = '#8b949e';
+      dataDiv.textContent = api.result.success ? JSON.stringify(api.result.data, null, 2) : 'Error: ' + (api.result.error || 'No transactions');
+      body.appendChild(dataDiv);
+    }
+    card.appendChild(body);
+    container.appendChild(card);
+  }
+}
+
+function renderNameResults(apis) {
+  var container = document.getElementById('nameResults');
+  container.innerHTML = '';
+  if (!apis || !apis.length) {
+    container.innerHTML = '<div style="color:#484f58;padding:20px;text-align:center">No name inquiry data available</div>';
+    return;
+  }
+  for (var i = 0; i < apis.length; i++) {
+    var api = apis[i];
+    var card = document.createElement('div');
+    card.className = 'api-card' + (api.result.success ? ' positive' : '');
+    var header = document.createElement('div');
+    header.className = 'api-card-header';
+    header.onclick = function() {
+      this.nextElementSibling.classList.toggle('active');
+    };
+    var badge = document.createElement('span');
+    badge.className = 'badge ' + (api.result.success ? 'found' : 'not-found');
+    badge.textContent = api.result.success ? 'VERIFIED' : 'NOT FOUND';
+    header.innerHTML = '<h3>' + api.name + '</h3>';
+    header.appendChild(badge);
+    var status = document.createElement('div');
+    status.className = 'api-status ' + (api.result.success ? 'success' : 'error');
+    header.appendChild(status);
+    card.appendChild(header);
+    var body = document.createElement('div');
+    body.className = 'api-card-body';
+    var dataDiv = document.createElement('div');
+    dataDiv.className = 'api-data highlight';
+    if (api.result.success && api.result.data) {
+      var data = api.result.data;
+      if (data.account_name || data.name || data.full_name) {
+        var bankSelect = document.getElementById('bankSelect');
+        var bankName = bankSelect.options[bankSelect.selectedIndex] ? bankSelect.options[bankSelect.selectedIndex].text : '';
+        dataDiv.innerHTML = '<div style="font-size:18px;font-weight:600;color:#c9d1d9">' + (data.account_name || data.name || data.full_name) + '</div><div style="font-size:12px;color:#484f58;margin-top:4px">' + (api.result.data.account_number || currentAccount) + ' • ' + (api.result.data.bank || bankName) + '</div>';
+      } else {
+        dataDiv.textContent = JSON.stringify(data, null, 2);
+      }
+    } else {
+      dataDiv.style.color = '#f85149';
+      dataDiv.textContent = 'Name not found: ' + (api.result.error || 'Request failed');
+    }
+    body.appendChild(dataDiv);
+    card.appendChild(body);
+    container.appendChild(card);
+  }
+}
+
+function renderAccountSummary(apis) {
+  var container = document.getElementById('accountSummary');
+  container.style.display = 'grid';
+  var totalBalance = 0, accounts = 0;
+  for (var i = 0; i < apis.length; i++) {
+    if (apis[i].result.success && apis[i].result.data && apis[i].result.data.balance) {
+      totalBalance += parseFloat(apis[i].result.data.balance) || 0;
+      accounts++;
+    }
+  }
+  var maxBalance = 0;
+  for (var i = 0; i < apis.length; i++) {
+    if (apis[i].result.success && apis[i].result.data && apis[i].result.data.balance) {
+      var bal = parseFloat(apis[i].result.data.balance) || 0;
+      if (bal > maxBalance) maxBalance = bal;
+    }
+  }
+  container.innerHTML = 
+    '<div class="item"><div class="label">Total Accounts</div><div class="value">' + accounts + '</div></div>' +
+    '<div class="item"><div class="label">Total Balance</div><div class="value positive">₦' + totalBalance.toLocaleString() + '</div></div>' +
+    '<div class="item"><div class="label">Highest Balance</div><div class="value positive">₦' + maxBalance.toLocaleString() + '</div></div>' +
+    '<div class="item"><div class="label">Accounts with Data</div><div class="value">' + Object.keys(allResults).length + '</div></div>';
+}
+
+function generateSummary() {
+  if (!currentAccount || Object.keys(allResults).length === 0) return;
+  var summary = document.getElementById('summaryContent');
+  var found = 0;
+  var totalBal = 0;
+  var values = Object.values(allResults);
+  for (var i = 0; i < values.length; i++) {
+    if (values[i].success) found++;
+    if (values[i].success && values[i].data && values[i].data.balance) {
+      totalBal += parseFloat(values[i].data.balance) || 0;
+    }
+  }
+  var riskLevel, riskColor;
+  if (totalBal > 10000000) {
+    riskLevel = t('risk_high');
+    riskColor = '#f85149';
+  } else if (totalBal > 1000000) {
+    riskLevel = t('risk_medium');
+    riskColor = '#d29922';
+  } else {
+    riskLevel = t('risk_low');
+    riskColor = '#3fb950';
+  }
+  var totalKeys = Object.keys(allResults).length;
+  summary.innerHTML =
+    '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">' +
+    '<div style="padding:8px 20px;border-radius:20px;background:' + riskColor + '20;border:1px solid ' + riskColor + ';color:' + riskColor + ';font-weight:600;font-size:14px">' + riskLevel + '</div>' +
+    '<div style="font-size:12px;color:#8b949e">Financial Risk Assessment</div>' +
+    '</div>' +
+    '<div style="margin-bottom:12px"><strong>Account/Identifier:</strong> ' + currentAccount + '</div>' +
+    '<div style="margin-bottom:12px"><strong>Banks Queried:</strong> ' + totalKeys + '</div>' +
+    '<div style="margin-bottom:12px"><strong>Successful Lookups:</strong> ' + found + '</div>' +
+    '<div style="margin-bottom:12px"><strong>Total Balance Found:</strong> ₦' + totalBal.toLocaleString() + '</div>' +
+    '<div style="margin-top:12px;padding-top:12px;border-top:1px solid #30363d;font-size:12px;color:#484f58">APIs Queried: ' + totalKeys + ' • Successful: ' + found + ' • Failed: ' + (totalKeys - found) + '</div>';
+}
+
+function generatePDF() {
+  if (!currentAccount || Object.keys(allResults).length === 0) { alert('No data to export.'); return; }
+  var report = 'DSS BANK ACCOUNT INTELLIGENCE REPORT\n========================================\nAccount: ' + currentAccount + '\nDate: ' + new Date().toISOString() + '\n\n--- RESULTS ---\n\n';
+  var entries = Object.entries(allResults);
+  for (var i = 0; i < entries.length; i++) {
+    var name = entries[i][0];
+    var result = entries[i][1];
+    report += name + ': ' + (result.success ? 'FOUND' : 'NOT FOUND') + '\n';
+    if (result.success) report += JSON.stringify(result.data, null, 2) + '\n';
+    report += '\n---\n\n';
+  }
+  var blob = new Blob([report], {type: 'text/plain'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'DSS_Bank_Report_' + currentAccount + '_' + Date.now() + '.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function downloadJSON() {
+  if (!currentAccount || Object.keys(allResults).length === 0) { alert('No data to export.'); return; }
+  var exportData = {report: {account: currentAccount, timestamp: new Date().toISOString()}, results: allResults};
+  var blob = new Blob([JSON.stringify(exportData, null, 2)], {type: 'application/json'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'DSS_Bank_Data_' + currentAccount + '_' + Date.now() + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function clearResults() {
+  allResults = {};
+  currentAccount = '';
+  document.getElementById('resultsContainer').classList.remove('active');
+  document.getElementById('statsGrid').style.display = 'none';
+  document.getElementById('accountSummary').style.display = 'none';
+  document.getElementById('accountInput').value = '';
+  document.getElementById('bvnInput').value = '';
+  document.getElementById('phoneInput').value = '';
+  var grids = document.querySelectorAll('.api-grid');
+  for (var i = 0; i < grids.length; i++) {
+    grids[i].innerHTML = '';
+  }
+  document.getElementById('summaryContent').textContent = 'No data available yet. Run an investigation to generate summary.';
+}
+
+document.getElementById('accountInput').addEventListener('keypress', function(e) { if (e.key === 'Enter') startInvestigation(); });
+document.getElementById('bvnInput').addEventListener('keypress', function(e) { if (e.key === 'Enter') startInvestigation(); });
+document.getElementById('phoneInput').addEventListener('keypress', function(e) { if (e.key === 'Enter') startInvestigation(); });
+</script>
+</body>
+</html>
