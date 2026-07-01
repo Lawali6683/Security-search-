@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>DSS NBN Intelligence System v2.0</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#0a0e17;color:#e0e6ed;min-height:100vh}
+.container{max-width:1400px;margin:0 auto;padding:20px}
+.header{background:linear-gradient(135deg,#0d1117 0%,#161b22 100%);border-bottom:1px solid #30363d;padding:15px 0;position:sticky;top:0;z-index:100}
+.header-content{display:flex;align-items:center;justify-content:space-between;max-width:1400px;margin:0 auto;padding:0 20px}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-icon{width:40px;height:40px;background:linear-gradient(135deg,#3fb950,#238636);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:bold}
+.logo-text{font-size:20px;font-weight:600;background:linear-gradient(135deg,#3fb950,#56d364);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header-badge{background:#21262d;border:1px solid #30363d;border-radius:6px;padding:6px 12px;font-size:12px;color:#8b949e}
+.search-section{background:linear-gradient(135deg,#161b22 0%,#1c2128 100%);border:1px solid #30363d;border-radius:12px;padding:30px;margin:20px 0}
+.search-title{font-size:18px;font-weight:600;margin-bottom:20px;color:#c9d1d9}
+.search-box{display:flex;gap:12px;flex-wrap:wrap}
+.search-input{flex:1;min-width:280px;padding:14px 18px;background:#0d1117;border:2px solid #30363d;border-radius:8px;color:#e0e6ed;font-size:16px;transition:all 0.3s}
+.search-input:focus{border-color:#3fb950;outline:none;box-shadow:0 0 0 3px rgba(63,185,80,0.15)}
+.search-btn{padding:14px 32px;background:linear-gradient(135deg,#238636,#2ea043);border:none;border-radius:8px;color:#fff;font-size:16px;font-weight:600;cursor:pointer;transition:all 0.3s}
+.search-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(46,160,67,0.3)}
+.search-btn:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+.password-hint{font-size:11px;color:#484f58;margin-top:8px;font-family:monospace}
+.id-type-selector{display:flex;gap:8px;margin:16px 0;flex-wrap:wrap}
+.id-btn{padding:10px 18px;border-radius:8px;border:1px solid #30363d;background:#0d1117;color:#8b949e;font-size:13px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:8px}
+.id-btn:hover{border-color:#3fb950;color:#3fb950}
+.id-btn.active{background:rgba(63,185,80,0.15);border-color:#3fb950;color:#3fb950}
+.id-btn .icon{font-size:16px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:20px 0}
+.stat-card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px}
+.stat-label{font-size:12px;color:#8b949e;text-transform:uppercase;letter-spacing:0.5px}
+.stat-value{font-size:24px;font-weight:700;color:#c9d1d9;margin-top:4px}
+.stat-value.active{color:#3fb950}
+.stat-value.error{color:#f85149}
+.stat-value.info{color:#58a6ff}
+.results-container{display:none}
+.results-container.active{display:block}
+.results-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.results-title{font-size:18px;font-weight:600;color:#c9d1d9}
+.results-actions{display:flex;gap:8px}
+.action-btn{padding:8px 16px;border-radius:6px;border:1px solid #30363d;background:#21262d;color:#c9d1d9;font-size:13px;cursor:pointer;transition:all 0.2s}
+.action-btn:hover{background:#30363d}
+.action-btn.primary{background:#1f6feb;border-color:#1f6feb;color:#fff}
+.action-btn.primary:hover{background:#388bfd}
+.action-btn.danger{background:#da3633;border-color:#da3633;color:#fff}
+.action-btn.danger:hover{background:#f85149}
+.api-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:12px;margin-bottom:20px}
+.api-card{background:#161b22;border:1px solid #30363d;border-radius:8px;overflow:hidden;transition:all 0.3s}
+.api-card:hover{border-color:#3fb950}
+.api-card.photo-card{grid-column:span 2}
+.api-card-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #30363d;cursor:pointer}
+.api-card-header h3{font-size:14px;font-weight:600;color:#c9d1d9}
+.api-card-header .badge{font-size:10px;padding:2px 8px;border-radius:10px;background:#21262d;color:#8b949e;margin-left:8px}
+.api-card-header .badge.found{background:rgba(63,185,80,0.2);color:#3fb950}
+.api-card-header .badge.not-found{background:rgba(248,81,73,0.2);color:#f85149}
+.api-status{width:8px;height:8px;border-radius:50%}
+.api-status.success{background:#3fb950;box-shadow:0 0 6px rgba(63,185,80,0.4)}
+.api-status.error{background:#f85149;box-shadow:0 0 6px rgba(248,81,73,0.4)}
+.api-status.loading{background:#d29922;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.api-card-body{padding:16px;display:none}
+.api-card-body.active{display:block}
+.api-data{padding:12px;background:#0d1117;border-radius:6px;font-family:monospace;font-size:12px;line-height:1.6;color:#8b949e;white-space:pre-wrap;word-break:break-word;max-height:200px;overflow-y:auto}
+.api-data.highlight{color:#c9d1d9}
+.api-data.photo-result{text-align:center;padding:20px;max-height:none}
+.api-data.photo-result img{max-width:200px;max-height:250px;border-radius:8px;border:2px solid #30363d;margin-bottom:12px}
+.api-data.photo-result .photo-label{font-size:12px;color:#8b949e;margin-bottom:4px}
+.api-data.photo-result .photo-value{font-size:14px;color:#c9d1d9;font-weight:600}
+.profile-card{background:#161b22;border:1px solid #3fb950;border-radius:12px;padding:24px;margin:16px 0;display:grid;grid-template-columns:auto 1fr;gap:20px}
+.profile-card .photo{width:120px;height:140px;background:#0d1117;border:2px solid #30363d;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:40px;color:#484f58;overflow:hidden}
+.profile-card .photo img{width:100%;height:100%;object-fit:cover}
+.profile-card .info{display:grid;grid-template-columns:1fr 1fr;gap:8px 20px}
+.profile-card .info .field{font-size:12px;color:#484f58}
+.profile-card .info .value{font-size:14px;color:#c9d1d9;font-weight:500}
+.summary-section{background:linear-gradient(135deg,#161b22,#1c2128);border:1px solid #30363d;border-radius:12px;padding:24px;margin:20px 0}
+.summary-title{font-size:18px;font-weight:600;margin-bottom:16px;color:#c9d1d9}
+.summary-content{font-size:14px;line-height:1.8;color:#8b949e}
+.summary-content strong{color:#c9d1d9}
+.language-selector{display:flex;gap:8px;margin:16px 0}
+.lang-btn{padding:6px 14px;border-radius:4px;border:1px solid #30363d;background:transparent;color:#8b949e;font-size:12px;cursor:pointer;transition:all 0.2s}
+.lang-btn:hover{border-color:#3fb950;color:#3fb950}
+.lang-btn.active{background:#238636;border-color:#238636;color:#fff}
+.photo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:16px 0}
+.photo-card-mini{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:12px;text-align:center}
+.photo-card-mini img{width:100%;height:140px;object-fit:cover;border-radius:4px;margin-bottom:8px}
+.photo-card-mini .photo-source{font-size:11px;color:#484f58}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center}
+.modal.active{display:flex}
+.modal-content{background:#161b22;border:1px solid #30363d;border-radius:12px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;padding:24px}
+.modal-title{font-size:18px;font-weight:600;margin-bottom:16px;color:#c9d1d9}
+.loading-spinner{display:flex;align-items:center;justify-content:center;padding:40px}
+.spinner{width:40px;height:40px;border:3px solid #30363d;border-top-color:#3fb950;border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tab-container{margin:20px 0}
+.tab-buttons{display:flex;gap:4px;margin-bottom:16px;overflow-x:auto}
+.tab-btn{padding:10px 20px;border:1px solid #30363d;background:#0d1117;color:#8b949e;font-size:13px;cursor:pointer;border-radius:8px 8px 0 0;transition:all 0.2s;white-space:nowrap}
+.tab-btn.active{background:#161b22;color:#c9d1d9;border-bottom-color:#161b22;border-top-color:#3fb950}
+.tab-btn:hover{background:#1c2128}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.map-container{height:400px;border-radius:8px;overflow:hidden;border:1px solid #30363d;margin:16px 0;display:none}
+.map-container.active{display:block}
+@media(max-width:768px){.search-box{flex-direction:column}.search-input{min-width:auto}.api-grid{grid-template-columns:1fr}.profile-card{grid-template-columns:1fr}.profile-card .info{grid-template-columns:1fr}.tab-buttons{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+
+<div class="header">
+<div class="header-content">
+<div class="logo">
+<div class="logo-icon">N</div>
+<div class="logo-text">DSS NBN Intelligence v2.0</div>
+</div>
+<div class="header-badge">SECURE • AUTHORIZED ACCESS ONLY</div>
+</div>
+</div>
+
+<div class="container">
+
+<div class="search-section">
+<div class="search-title">National Biometric & Identity Intelligence Search</div>
+<div class="id-type-selector" id="idTypeSelector">
+<button class="id-btn active" data-type="bvn" onclick="selectIDType('bvn')"><span class="icon">🔢</span> BVN</button>
+<button class="id-btn" data-type="nin" onclick="selectIDType('nin')"><span class="icon">🆔</span> NIN</button>
+<button class="id-btn" data-type="passport" onclick="selectIDType('passport')"><span class="icon">📘</span> Passport</button>
+<button class="id-btn" data-type="voter" onclick="selectIDType('voter')"><span class="icon">🗳️</span> Voter Card</button>
+<button class="id-btn" data-type="license" onclick="selectIDType('license')"><span class="icon">🚗</span> Driver License</button>
+<button class="id-btn" data-type="phone" onclick="selectIDType('phone')"><span class="icon">📱</span> Phone Number</button>
+</div>
+<div class="search-box">
+<input type="text" class="search-input" id="searchInput" placeholder="Enter BVN, NIN, Passport, Voter ID, License or Phone number">
+<button class="search-btn" id="searchBtn" onclick="startInvestigation()">Begin Investigation</button>
+</div>
+<div class="password-hint">Authentication: @dss/v1 • All requests are encrypted and logged</div>
+</div>
+
+<div class="stats-grid" id="statsGrid" style="display:none">
+<div class="stat-card"><div class="stat-label">APIs Queried</div><div class="stat-value" id="totalApis">0</div></div>
+<div class="stat-card"><div class="stat-label">Records Found</div><div class="stat-value active" id="recordsFound">0</div></div>
+<div class="stat-card"><div class="stat-label">Photos Retrieved</div><div class="stat-value info" id="photosFound">0</div></div>
+<div class="stat-card"><div class="stat-label">Failed</div><div class="stat-value error" id="failCount">0</div></div>
+<div class="stat-card"><div class="stat-label">Response Time</div><div class="stat-value" id="responseTime">0ms</div></div>
+</div>
+
+<div class="results-container" id="resultsContainer">
+<div class="results-header">
+<div class="results-title">Investigation Results: <span id="targetQuery" style="color:#3fb950"></span> <span id="targetType" style="font-size:12px;color:#484f58"></span></div>
+<div class="results-actions">
+<button class="action-btn" onclick="generatePDF()">📄 Export PDF</button>
+<button class="action-btn" onclick="downloadJSON()">💾 Download JSON</button>
+<button class="action-btn danger" onclick="clearResults()">🗑 Clear All</button>
+</div>
+</div>
+
+<div class="language-selector" id="languageSelector">
+<button class="lang-btn active" onclick="setLanguage('english')">English</button>
+<button class="lang-btn" onclick="setLanguage('hausa')">Hausa</button>
+<button class="lang-btn" onclick="setLanguage('pidgin')">Pidgin</button>
+</div>
+
+<div id="profileCard" class="profile-card" style="display:none"></div>
+
+<div id="photoGallery" class="photo-grid" style="display:none"></div>
+
+<div class="tab-container">
+<div class="tab-buttons">
+<button class="tab-btn active" onclick="switchTab('bvn')">🔢 BVN Records</button>
+<button class="tab-btn" onclick="switchTab('nin')">🆔 NIN Records</button>
+<button class="tab-btn" onclick="switchTab('passport')">📘 Passport</button>
+<button class="tab-btn" onclick="switchTab('voter')">🗳️ Voter Card</button>
+<button class="tab-btn" onclick="switchTab('license')">🚗 Driver License</button>
+<button class="tab-btn" onclick="switchTab('accounts')">🏦 Bank Accounts</button>
+</div>
+
+<div class="tab-content active" id="tab-bvn"><div id="bvnResults" class="api-grid"></div></div>
+<div class="tab-content" id="tab-nin"><div id="ninResults" class="api-grid"></div></div>
+<div class="tab-content" id="tab-passport"><div id="passportResults" class="api-grid"></div></div>
+<div class="tab-content" id="tab-voter"><div id="voterResults" class="api-grid"></div></div>
+<div class="tab-content" id="tab-license"><div id="licenseResults" class="api-grid"></div></div>
+<div class="tab-content" id="tab-accounts"><div id="accountsResults" class="api-grid"></div></div>
+</div>
+
+<div class="map-container" id="mapContainer">
+<iframe id="mapFrame" width="100%" height="100%" frameborder="0" style="border:0" allowfullscreen></iframe>
+</div>
+
+<div class="summary-section">
+<div class="summary-title">📋 Intelligence Summary</div>
+<div class="summary-content" id="summaryContent">No data available yet. Run an investigation to generate summary.</div>
+</div>
+</div>
+
+</div>
+
+<div class="modal" id="loadingModal">
+<div class="modal-content">
+<div class="modal-title">🔍 Investigation in Progress</div>
+<div class="loading-spinner"><div class="spinner"></div></div>
+<p style="text-align:center;color:#8b949e" id="loadingStatus">Querying national databases and identity APIs...</p>
+</div>
+</div>
+
+<script>
+const API_PASSWORD = '@dss/v1';
+const WORKER_URL = 'https://security.pages.dev/api/nbn.js';
+let currentQuery = '';
+let currentType = 'bvn';
+let allResults = {};
+let language = 'english';
+
+const translations = {
+english:{searching:'Searching databases...',success:'Record Found',fail:'No Record',photo:'Photo Retrieved',records:'Records Found',accounts:'Bank Accounts',summary_header:'Identity Intelligence Summary',identity_confirmed:'Identity Confirmed',identity_partial:'Partial Identity Found',identity_none:'No Identity Found',photos_available:'Photographs Available',no_photos:'No Photographs'},
+hausa:{searching:'Ana bincike...',success:'An Samu Record',fail:'Babu Record',photo:'An Samu Hoto',records:'Records da aka Samu',accounts:'Asusun Banki',summary_header:'Takaitaccen Bayanin Identity',identity_confirmed:'An Tabbatar da Identity',identity_partial:'An Samu Identity Kadan',identity_none:'Ba a Samu Identity ba',photos_available:'Hotuna Sune',no_photos:'Babu Hotuna'},
+pidgin:{searching:'De search database...',success:'Record Dey',fail:'No Record',photo:'Photo Dey',records:'Records Wey We Find',accounts:'Bank Accounts',summary_header:'Wetin We Find For Identity',identity_confirmed:'Identity Don Confirmed',identity_partial:'Identity Dey Small',identity_none:'No Identity',photos_available:'Photo Dey o',no_photos:'No Photo'}
+};
+
+function t(key){return translations[language]?.[key]||key}
+
+function setLanguage(lang){
+language=lang;
+document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));
+document.querySelector(`.lang-btn[onclick="setLanguage('${lang}')"]`).classList.add('active');
+if(currentQuery) generateSummary();
+}
+
+function selectIDType(type){
+currentType=type;
+document.querySelectorAll('.id-btn').forEach(b=>b.classList.remove('active'));
+document.querySelector(`.id-btn[data-type="${type}"]`).classList.add('active');
+const placeholders={bvn:'Enter BVN (11 digits)',nin:'Enter NIN (11 digits)',passport:'Enter Passport Number',voter:'Enter Voter Card Number (VIN)',license:'Enter Driver License Number',phone:'Enter Phone Number (e.g., 2348012345678)'};
+document.getElementById('searchInput').placeholder=placeholders[type]||'Enter identifier';
+}
+
+function switchTab(tab){
+document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+document.querySelector(`.tab-btn[onclick*='${tab}']`).classList.add('active');
+document.getElementById(`tab-${tab}`).classList.add('active');
+}
+
+const API_ENDPOINTS = {
+bvn:[
+{name:'NIBSS BVN Lookup',url:'https://nibss-api.com/bvn/{query}',method:'GET',category:'bvn'},
+{name:'NIBSS BVN v2',url:'https://nibss-plc.com.ng/v2/bvn/{query}',method:'GET',category:'bvn'},
+{name:'NIBSS BVN Photo',url:'https://nibss-bvn.com/bvn/{query}/photo',method:'GET',category:'bvn',isPhoto:true},
+{name:'NIBSS Fingerprint',url:'https://nibss-api.com/bvn/{query}/fingerprint',method:'GET',category:'bvn'},
+{name:'BVN2Info',url:'https://bvn2info.com/api/{query}',method:'GET',category:'bvn'},
+{name:'INEC BVN Link',url:'https://inec.gov.ng/api/v1/bvn/{query}/voter',method:'GET',category:'voter'},
+{name:'FRSC BVN Link',url:'https://frsc.gov.ng/api/bvn/{query}',method:'GET',category:'license'},
+{name:'NIMC BVN Link',url:'https://nimc.gov.ng/api/v1/bvn/{query}/nin',method:'GET',category:'nin'}
+],
+nin:[
+{name:'NIMC NIN Lookup',url:'https://nimc.gov.ng/api/v1/nin/{query}',method:'GET',category:'nin'},
+{name:'NIMC NIN Photo',url:'https://nimc.gov.ng/api/v1/nin/{query}/photo',method:'GET',category:'nin',isPhoto:true},
+{name:'NIN Database',url:'https://nidb.com.ng/search?nin={query}',method:'GET',category:'nin'},
+{name:'NIN Verification',url:'https://verify.nin.gov.ng/api/{query}',method:'GET',category:'nin'}
+],
+passport:[
+{name:'NIS Passport',url:'https://nis.gov.ng/api/v1/passport/{query}',method:'GET',category:'passport'},
+{name:'NIS Passport Photo',url:'https://nis.gov.ng/api/v1/passport/{query}/photo',method:'GET',category:'passport',isPhoto:true},
+{name:'NIS BVN Link',url:'https://nis.gov.ng/api/v1/bvn/{query}/passport',method:'GET',category:'passport'}
+],
+voter:[
+{name:'INEC Voter Lookup',url:'https://inec.gov.ng/api/v1/voter/{query}',method:'GET',category:'voter'},
+{name:'INEC Voter Photo',url:'https://inec.gov.ng/api/v1/voter/{query}/photo',method:'GET',category:'voter',isPhoto:true},
+{name:'Voter Database',url:'https://voters.ng/search?bvn={query}',method:'GET',category:'voter'}
+],
+license:[
+{name:'FRSC License',url:'https://frsc.gov.ng/api/drivers/{query}',method:'GET',category:'license'},
+{name:'FRSC License Photo',url:'https://frsc.gov.ng/api/drivers/{query}/photo',method:'GET',category:'license',isPhoto:true},
+{name:'Driver Database',url:'https://nigeriadrivers.com/search/{query}',method:'GET',category:'license'}
+],
+bank_accounts:[
+{name:'Zenith Bank BVN',url:'https://zenith-api.com/bvn/{query}',method:'GET',category:'accounts'},
+{name:'GTBank BVN',url:'https://gtbank-api.com/bvn/{query}',method:'GET',category:'accounts'},
+{name:'Access Bank BVN',url:'https://access-api.com/bvn/{query}',method:'GET',category:'accounts'},
+{name:'UBA BVN',url:'https://uba-api.com/bvn/{query}',method:'GET',category:'accounts'},
+{name:'FirstBank BVN',url:'https://firstbank-api.com/bvn/{query}',method:'GET',category:'accounts'},
+{name:'Fidelity BVN',url:'https://fidelity-api.com/bvn/{query}',method:'GET',category:'accounts'},
+{name:'Union BVN',url:'https://union-api.com/bvn/{query}',method:'GET',category:'accounts'},
+{name:'Ecobank BVN',url:'https://ecobank-api.com/bvn/{query}',method:'GET',category:'accounts'},
+{name:'Stanbic BVN',url:'https://stanbic-api.com/bvn/{query}',method:'GET',category:'accounts'},
+{name:'Polaris BVN',url:'https://polaris-api.com/bvn/{query}',method:'GET',category:'accounts'}
+]
+};
+
+async function queryAPI(endpoint, query){
+const url = endpoint.url.replace('{query}', encodeURIComponent(query));
+const startTime = Date.now();
+try{
+const response = await fetch(WORKER_URL, {
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({
+password:API_PASSWORD,
+type:'api',
+target:url,
+method:endpoint.method||'GET',
+name:endpoint.name,
+category:endpoint.category,
+isPhoto:endpoint.isPhoto||false
+})
+});
+const data = await response.json();
+return{success:data.success,data:data.data||data,isPhoto:endpoint.isPhoto,time:Date.now()-startTime};
+}catch(e){
+return{success:false,error:e.message,isPhoto:false,time:Date.now()-startTime};
+}
+}
+
+async function startInvestigation(){
+const query = document.getElementById('searchInput').value.trim();
+if(!query){
+alert('Please enter a valid identifier');
+return;
+}
+
+currentQuery = query;
+document.getElementById('targetQuery').textContent = query;
+document.getElementById('targetType').textContent = `(${currentType.toUpperCase()})`;
+document.getElementById('searchBtn').disabled = true;
+document.getElementById('searchBtn').textContent = '⏳ Investigating...';
+document.getElementById('loadingModal').classList.add('active');
+document.getElementById('resultsContainer').classList.remove('active');
+document.getElementById('statsGrid').style.display = 'none';
+document.getElementById('profileCard').style.display = 'none';
+document.getElementById('photoGallery').style.display = 'none';
+allResults = {};
+
+let total = 0, success = 0, fail = 0, photos = 0;
+let totalTime = 0;
+const resultsByCategory = {bvn:[],nin:[],passport:[],voter:[],license:[],accounts:[]};
+const photosList = [];
+let consolidatedProfile = {};
+
+const allApis = [
+...API_ENDPOINTS.bvn,
+...API_ENDPOINTS.nin,
+...API_ENDPOINTS.passport,
+...API_ENDPOINTS.voter,
+...API_ENDPOINTS.license,
+...API_ENDPOINTS.bank_accounts
+];
+
+for(const api of allApis){
+total++;
+document.getElementById('loadingStatus').textContent = `Querying ${api.name}...`;
+
+const result = await queryAPI(api, query);
+totalTime += result.time;
+
+if(result.success){
+success++;
+if(result.isPhoto && result.data && result.data.photo_url){
+photos++;
+photosList.push({source:api.name,url:result.data.photo_url});
+}
+if(result.data){
+if(result.data.full_name) consolidatedProfile.full_name = result.data.full_name;
+if(result.data.date_of_birth) consolidatedProfile.dob = result.data.date_of_birth;
+if(result.data.phone) consolidatedProfile.phone = result.data.phone;
+if(result.data.address) consolidatedProfile.address = result.data.address;
+if(result.data.photo_url) consolidatedProfile.photo = result.data.photo_url;
+if(result.data.email) consolidatedProfile.email = result.data.email;
+}
+} else {
+fail++;
+}
+
+const cat = api.category || 'bvn';
+if(resultsByCategory[cat]) resultsByCategory[cat].push({...api, result});
+allResults[api.name] = result;
+
+document.getElementById('totalApis').textContent = total;
+document.getElementById('recordsFound').textContent = success;
+document.getElementById('photosFound').textContent = photos;
+document.getElementById('failCount').textContent = fail;
+document.getElementById('responseTime').textContent = `${Math.round(totalTime/total)}ms`;
+}
+
+document.getElementById('loadingModal').classList.remove('active');
+document.getElementById('statsGrid').style.display = 'grid';
+document.getElementById('resultsContainer').classList.add('active');
+document.getElementById('searchBtn').disabled = false;
+document.getElementById('searchBtn').textContent = '🔍 Begin Investigation';
+
+renderResults('bvnResults', resultsByCategory.bvn);
+renderResults('ninResults', resultsByCategory.nin);
+renderResults('passportResults', resultsByCategory.passport);
+renderResults('voterResults', resultsByCategory.voter);
+renderResults('licenseResults', resultsByCategory.license);
+renderResults('accountsResults', resultsByCategory.accounts);
+renderProfileCard(consolidatedProfile, photosList);
+renderPhotoGallery(photosList);
+generateSummary();
+}
+
+function renderResults(containerId, apis){
+const container = document.getElementById(containerId);
+container.innerHTML = '';
+if(!apis || !apis.length){container.innerHTML='<div style="color:#484f58;padding:20px;text-align:center">No data available</div>';return;}
+for(const api of apis){
+const card = document.createElement('div');
+card.className = `api-card ${api.result.isPhoto && api.result.success ? 'photo-card' : ''}`;
+const header = document.createElement('div');
+header.className = 'api-card-header';
+header.onclick=function(){this.nextElementSibling.classList.toggle('active')};
+const badge = document.createElement('span');
+badge.className = `badge ${api.result.success ? 'found' : 'not-found'}`;
+badge.textContent = api.result.success ? 'FOUND' : 'NOT FOUND';
+header.innerHTML = `<h3>${api.name}</h3>`;
+header.appendChild(badge);
+const status=document.createElement('div');
+status.className=`api-status ${api.result.success?'success':'error'}`;
+header.appendChild(status);
+card.appendChild(header);
+const body=document.createElement('div');
+body.className='api-card-body';
+const dataDiv=document.createElement('div');
+if(api.result.isPhoto && api.result.success && api.result.data){
+dataDiv.className='api-data photo-result';
+if(api.result.data.photo_url){
+dataDiv.innerHTML = `<div class="photo-label">${api.name}</div><img src="${api.result.data.photo_url}" onerror="this.style.display='none'" alt="Photo"><div class="photo-value">Photo Retrieved</div>`;
+} else {
+dataDiv.textContent = 'Photo URL not available';
+}
+} else {
+dataDiv.className='api-data highlight';
+dataDiv.textContent=api.result.success?JSON.stringify(api.result.data,null,2):`Error: ${api.result.error||'No record found'}`;
+if(!api.result.success) dataDiv.style.color='#f85149';
+}
+body.appendChild(dataDiv);
+card.appendChild(body);
+container.appendChild(card);
+}
+}
+
+function renderProfileCard(profile, photos){
+const container = document.getElementById('profileCard');
+if(!profile.full_name && !profile.photo && !profile.dob){container.style.display='none';return;}
+container.style.display='grid';
+let photoHtml = '<div class="photo"><span>📷</span></div>';
+if(profile.photo){
+photoHtml = `<div class="photo"><img src="${profile.photo}" alt="Profile Photo" onerror="this.parentElement.innerHTML='<span>📷</span>'"></div>`;
+} else if(photos.length > 0){
+photoHtml = `<div class="photo"><img src="${photos[0].url}" alt="Profile Photo" onerror="this.parentElement.innerHTML='<span>📷</span>'"></div>`;
+}
+container.innerHTML = `
+${photoHtml}
+<div class="info">
+<div><div class="field">Full Name</div><div class="value">${profile.full_name||'N/A'}</div></div>
+<div><div class="field">Date of Birth</div><div class="value">${profile.dob||'N/A'}</div></div>
+<div><div class="field">Phone Number</div><div class="value">${profile.phone||'N/A'}</div></div>
+<div><div class="field">Email</div><div class="value">${profile.email||'N/A'}</div></div>
+<div style="grid-column:1/-1"><div class="field">Address</div><div class="value">${profile.address||'N/A'}</div></div>
+${profile.address ? `<div style="grid-column:1/-1;margin-top:8px"><button class="action-btn primary" onclick="showOnMap('${profile.address}')">📍 Show on Map</button></div>` : ''}
+</div>
+`;
+}
+
+function renderPhotoGallery(photos){
+const container = document.getElementById('photoGallery');
+if(!photos.length){container.style.display='none';return;}
+container.style.display='grid';
+container.innerHTML = photos.map(p => `
+<div class="photo-card-mini">
+<img src="${p.url}" onerror="this.parentElement.style.display='none'" alt="${p.source}">
+<div class="photo-source">${p.source}</div>
+</div>
+`).join('');
+}
+
+function showOnMap(address){
+document.getElementById('mapContainer').classList.add('active');
+document.getElementById('mapFrame').src = `https://www.openstreetmap.org/export/embed.html?layer=mapnik&marker=9.0579,7.4951&q=${encodeURIComponent(address)}`;
+}
+
+function generateSummary(){
+if(!currentQuery || Object.keys(allResults).length === 0) return;
+const summary = document.getElementById('summaryContent');
+let recordCount = Object.values(allResults).filter(v=>v.success).length;
+let photoCount = Object.values(allResults).filter(v=>v.isPhoto && v.success).length;
+let identityStatus = recordCount >= 3 ? t('identity_confirmed') : recordCount >= 1 ? t('identity_partial') : t('identity_none');
+let identityColor = recordCount >= 3 ? '#3fb950' : recordCount >= 1 ? '#d29922' : '#f85149';
+summary.innerHTML = `
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+<div style="padding:8px 20px;border-radius:20px;background:${identityColor}20;border:1px solid ${identityColor};color:${identityColor};font-weight:600;font-size:14px">${identityStatus}</div>
+<div style="font-size:12px;color:#8b949e">Identity Status</div>
+</div>
+<div style="margin-bottom:12px"><strong>Identifier:</strong> ${currentQuery} (${currentType.toUpperCase()})</div>
+<div style="margin-bottom:8px"><strong>${t('records')}:</strong> ${recordCount}</div>
+<div style="margin-bottom:8px"><strong>${t('photos')}:</strong> ${photoCount > 0 ? t('photos_available') : t('no_photos')}</div>
+<div style="margin-bottom:8px"><strong>${t('accounts')}:</strong> Checking...</div>
+<div style="margin-top:12px;padding-top:12px;border-top:1px solid #30363d;font-size:12px;color:#484f58">
+${t('searching')} ${Object.keys(allResults).length} APIs • ${recordCount} ${t('success')} • ${Object.values(allResults).filter(v=>!v.success).length} ${t('fail')}
+</div>
+`;
+}
+
+function generatePDF(){
+if(!currentQuery || Object.keys(allResults).length === 0){alert('No data to export.');return;}
+let report = `DSS NBN INTELLIGENCE REPORT\n==============================\nIdentifier: ${currentQuery}\nType: ${currentType.toUpperCase()}\nDate: ${new Date().toISOString()}\n\n--- PROFILE ---\n\n`;
+const profile = document.getElementById('profileCard');
+if(profile.style.display !== 'none'){
+report += `Full Name: ${profile.querySelector('.value')?.textContent||'N/A'}\n`;
+}
+report += `\n--- RESULTS ---\n\n`;
+for(const[name,result] of Object.entries(allResults)){
+report+=`${name}: ${result.success?'FOUND':'NOT FOUND'}\n`;
+if(result.success) report+=`${JSON.stringify(result.data,null,2)}\n`;
+report+=`\n---\n\n`;
+}
+const blob=new Blob([report],{type:'text/plain'});
+const url=URL.createObjectURL(blob);
+const a=document.createElement('a');
+a.href=url;
+a.download=`DSS_NBN_Report_${currentQuery}_${Date.now()}.txt`;
+a.click();
+URL.revokeObjectURL(url);
+}
+
+function downloadJSON(){
+if(!currentQuery || Object.keys(allResults).length === 0){alert('No data to export.');return;}
+const exportData={report:{identifier:currentQuery,type:currentType,timestamp:new Date().toISOString()},results:allResults};
+const blob=new Blob([JSON.stringify(exportData,null,2)],{type:'application/json'});
+const url=URL.createObjectURL(blob);
+const a=document.createElement('a');
+a.href=url;
+a.download=`DSS_NBN_Data_${currentQuery}_${Date.now()}.json`;
+a.click();
+URL.revokeObjectURL(url);
+}
+
+function clearResults(){
+allResults={};currentQuery='';
+document.getElementById('resultsContainer').classList.remove('active');
+document.getElementById('statsGrid').style.display='none';
+document.getElementById('searchInput').value='';
+document.querySelectorAll('.api-grid').forEach(g=>g.innerHTML='');
+document.getElementById('profileCard').style.display='none';
+document.getElementById('photoGallery').style.display='none';
+document.getElementById('mapContainer').classList.remove('active');
+document.getElementById('summaryContent').textContent='No data available yet. Run an investigation to generate summary.';
+}
+
+document.getElementById('searchInput').addEventListener('keypress',function(e){if(e.key==='Enter')startInvestigation()});
+</script>
+</body>
+</html>
