@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>DSS Face Intelligence System v2.0</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#0a0e17;color:#e0e6ed;min-height:100vh}
+.container{max-width:1400px;margin:0 auto;padding:20px}
+.header{background:linear-gradient(135deg,#0d1117 0%,#161b22 100%);border-bottom:1px solid #30363d;padding:15px 0;position:sticky;top:0;z-index:100}
+.header-content{display:flex;align-items:center;justify-content:space-between;max-width:1400px;margin:0 auto;padding:0 20px}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-icon{width:40px;height:40px;background:linear-gradient(135deg,#bc8cff,#7c3aed);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:bold}
+.logo-text{font-size:20px;font-weight:600;background:linear-gradient(135deg,#bc8cff,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header-badge{background:#21262d;border:1px solid #30363d;border-radius:6px;padding:6px 12px;font-size:12px;color:#8b949e}
+.search-section{background:linear-gradient(135deg,#161b22 0%,#1c2128 100%);border:1px solid #30363d;border-radius:12px;padding:30px;margin:20px 0}
+.search-title{font-size:18px;font-weight:600;margin-bottom:20px;color:#c9d1d9}
+.upload-area{border:2px dashed #30363d;border-radius:12px;padding:40px;text-align:center;cursor:pointer;transition:all 0.3s;margin-bottom:16px}
+.upload-area:hover{border-color:#bc8cff;background:rgba(188,140,255,0.05)}
+.upload-area.dragover{border-color:#7c3aed;background:rgba(124,58,237,0.1)}
+.upload-icon{font-size:48px;margin-bottom:12px;color:#484f58}
+.upload-text{font-size:16px;color:#8b949e;margin-bottom:8px}
+.upload-hint{font-size:12px;color:#484f58}
+.upload-preview{display:none;margin-top:16px}
+.upload-preview.active{display:block}
+.preview-container{display:flex;align-items:center;gap:20px;padding:16px;background:#0d1117;border-radius:8px}
+.preview-container img{width:120px;height:140px;object-fit:cover;border-radius:8px;border:2px solid #30363d}
+.preview-info{flex:1}
+.preview-name{font-size:14px;color:#c9d1d9;font-weight:600}
+.preview-size{font-size:12px;color:#484f58;margin-top:4px}
+.preview-remove{color:#f85149;font-size:12px;cursor:pointer;margin-top:8px}
+.url-input-row{display:flex;gap:12px;margin-top:16px}
+.url-input{flex:1;padding:14px 18px;background:#0d1117;border:2px solid #30363d;border-radius:8px;color:#e0e6ed;font-size:16px;transition:all 0.3s}
+.url-input:focus{border-color:#bc8cff;outline:none;box-shadow:0 0 0 3px rgba(188,140,255,0.15)}
+.search-method{display:flex;gap:8px;margin-bottom:16px}
+.method-btn{padding:8px 18px;border-radius:6px;border:1px solid #30363d;background:#0d1117;color:#8b949e;font-size:13px;cursor:pointer;transition:all 0.2s}
+.method-btn:hover{border-color:#bc8cff;color:#bc8cff}
+.method-btn.active{background:rgba(188,140,255,0.15);border-color:#bc8cff;color:#bc8cff}
+.search-btn{padding:14px 32px;background:linear-gradient(135deg,#7c3aed,#bc8cff);border:none;border-radius:8px;color:#fff;font-size:16px;font-weight:600;cursor:pointer;transition:all 0.3s;width:100%}
+.search-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(124,58,237,0.3)}
+.search-btn:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:20px 0}
+.stat-card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px}
+.stat-label{font-size:12px;color:#8b949e;text-transform:uppercase;letter-spacing:0.5px}
+.stat-value{font-size:24px;font-weight:700;color:#c9d1d9;margin-top:4px}
+.stat-value.active{color:#3fb950}
+.stat-value.error{color:#f85149}
+.stat-value.info{color:#bc8cff}
+.results-container{display:none}
+.results-container.active{display:block}
+.results-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.results-title{font-size:18px;font-weight:600;color:#c9d1d9}
+.results-actions{display:flex;gap:8px}
+.action-btn{padding:8px 16px;border-radius:6px;border:1px solid #30363d;background:#21262d;color:#c9d1d9;font-size:13px;cursor:pointer;transition:all 0.2s}
+.action-btn:hover{background:#30363d}
+.action-btn.primary{background:#1f6feb;border-color:#1f6feb;color:#fff}
+.action-btn.primary:hover{background:#388bfd}
+.action-btn.danger{background:#da3633;border-color:#da3633;color:#fff}
+.action-btn.danger:hover{background:#f85149}
+.api-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:12px;margin-bottom:20px}
+.api-card{background:#161b22;border:1px solid #30363d;border-radius:8px;overflow:hidden;transition:all 0.3s}
+.api-card:hover{border-color:#bc8cff}
+.api-card.photo-match{border-color:#7c3aed;background:rgba(124,58,237,0.05)}
+.api-card-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #30363d;cursor:pointer}
+.api-card-header h3{font-size:14px;font-weight:600;color:#c9d1d9;display:flex;align-items:center;gap:8px}
+.api-card-header .badge{font-size:10px;padding:2px 8px;border-radius:10px;background:#21262d;color:#8b949e;margin-left:8px}
+.api-card-header .badge.found{background:rgba(124,58,237,0.2);color:#bc8cff}
+.api-card-header .badge.not-found{background:rgba(248,81,73,0.2);color:#f85149}
+.api-status{width:8px;height:8px;border-radius:50%}
+.api-status.success{background:#3fb950;box-shadow:0 0 6px rgba(63,185,80,0.4)}
+.api-status.error{background:#f85149;box-shadow:0 0 6px rgba(248,81,73,0.4)}
+.api-status.loading{background:#d29922;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.api-card-body{padding:16px;display:none}
+.api-card-body.active{display:block}
+.api-data{padding:12px;background:#0d1117;border-radius:6px;font-family:monospace;font-size:12px;line-height:1.6;color:#8b949e;white-space:pre-wrap;word-break:break-word;max-height:200px;overflow-y:auto}
+.api-data.highlight{color:#c9d1d9}
+.api-data.match-result{text-align:center;padding:20px;max-height:none}
+.api-data.match-result img{max-width:150px;max-height:180px;border-radius:8px;border:2px solid #30363d;margin-bottom:12px}
+.match-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:16px 0}
+.match-card{background:#0d1117;border:1px solid #30363d;border-radius:8px;overflow:hidden;cursor:pointer;transition:all 0.3s}
+.match-card:hover{border-color:#bc8cff;transform:translateY(-2px)}
+.match-card img{width:100%;height:160px;object-fit:cover;border-bottom:1px solid #30363d}
+.match-card .match-info{padding:10px}
+.match-card .match-source{font-size:11px;color:#484f58}
+.match-card .match-name{font-size:13px;color:#c9d1d9;font-weight:500;margin-top:4px}
+.match-card .match-score{font-size:11px;color:#bc8cff;margin-top:4px}
+.face-compare{display:flex;gap:20px;justify-content:center;padding:20px;background:#0d1117;border-radius:8px;margin:16px 0}
+.face-compare .face-col{text-align:center}
+.face-compare .face-col img{width:120px;height:140px;object-fit:cover;border-radius:8px;border:2px solid #30363d}
+.face-compare .face-col .label{font-size:11px;color:#484f58;margin-top:8px}
+.face-compare .face-col .match-percent{font-size:20px;font-weight:700;color:#bc8cff;margin-top:4px}
+.forensic-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:16px 0}
+.forensic-item{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:12px}
+.forensic-item .f-label{font-size:11px;color:#484f58}
+.forensic-item .f-value{font-size:14px;color:#c9d1d9;margin-top:4px;word-break:break-all}
+.tab-container{margin:20px 0}
+.tab-buttons{display:flex;gap:4px;margin-bottom:16px;overflow-x:auto}
+.tab-btn{padding:10px 20px;border:1px solid #30363d;background:#0d1117;color:#8b949e;font-size:13px;cursor:pointer;border-radius:8px 8px 0 0;transition:all 0.2s;white-space:nowrap}
+.tab-btn.active{background:#161b22;color:#c9d1d9;border-bottom-color:#161b22;border-top-color:#bc8cff}
+.tab-btn:hover{background:#1c2128}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.summary-section{background:linear-gradient(135deg,#161b22,#1c2128);border:1px solid #30363d;border-radius:12px;padding:24px;margin:20px 0}
+.summary-title{font-size:18px;font-weight:600;margin-bottom:16px;color:#c9d1d9}
+.summary-content{font-size:14px;line-height:1.8;color:#8b949e}
+.summary-content strong{color:#c9d1d9}
+.language-selector{display:flex;gap:8px;margin:16px 0}
+.lang-btn{padding:6px 14px;border-radius:4px;border:1px solid #30363d;background:transparent;color:#8b949e;font-size:12px;cursor:pointer;transition:all 0.2s}
+.lang-btn:hover{border-color:#bc8cff;color:#bc8cff}
+.lang-btn.active{background:#7c3aed;border-color:#7c3aed;color:#fff}
+.map-container{height:400px;border-radius:8px;overflow:hidden;border:1px solid #30363d;margin:16px 0;display:none}
+.map-container.active{display:block}
+@media(max-width:768px){.upload-area{padding:20px}.preview-container{flex-direction:column;align-items:center}.face-compare{flex-direction:column;align-items:center}.api-grid{grid-template-columns:1fr}.match-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<div class="header">
+<div class="header-content">
+<div class="logo">
+<div class="logo-icon">F</div>
+<div class="logo-text">DSS Face Intelligence v2.0</div>
+</div>
+<div class="header-badge">SECURE • AUTHORIZED ACCESS ONLY</div>
+</div>
+</div>
+
+<div class="container">
+
+<div class="search-section">
+<div class="search-title">Face Recognition & Image Intelligence Search</div>
+<div class="search-method" id="searchMethod">
+<button class="method-btn active" data-method="upload" onclick="selectMethod('upload')">📤 Upload Image</button>
+<button class="method-btn" data-method="url" onclick="selectMethod('url')">🔗 Image URL</button>
+<button class="method-btn" data-method="video" onclick="selectMethod('video')">🎥 Video URL</button>
+</div>
+<div id="uploadMethod">
+<div class="upload-area" id="uploadArea">
+<div class="upload-icon">📷</div>
+<div class="upload-text">Click or drag & drop face image here</div>
+<div class="upload-hint">Supports JPG, PNG, WEBP • Max 10MB • Face must be clearly visible</div>
+<input type="file" id="fileInput" accept="image/*" style="display:none">
+</div>
+<div class="upload-preview" id="uploadPreview">
+<div class="preview-container">
+<img id="previewImg" src="" alt="Preview">
+<div class="preview-info">
+<div class="preview-name" id="previewName">image.jpg</div>
+<div class="preview-size" id="previewSize">0 KB</div>
+<div class="preview-remove" onclick="removeImage()">✕ Remove</div>
+</div>
+</div>
+</div>
+</div>
+<div id="urlMethod" style="display:none">
+<div class="url-input-row">
+<input type="text" class="url-input" id="urlInput" placeholder="Enter image URL (e.g., https://example.com/face.jpg)">
+</div>
+</div>
+<div id="videoMethod" style="display:none">
+<div class="url-input-row">
+<input type="text" class="url-input" id="videoInput" placeholder="Enter video URL (YouTube, Facebook, Instagram, TikTok)">
+</div>
+</div>
+<button class="search-btn" id="searchBtn" onclick="startInvestigation()">🔍 Search Face Across All Databases</button>
+<div class="password-hint">Authentication: @dss/v1 • All images are encrypted and processed securely</div>
+</div>
+
+<div class="stats-grid" id="statsGrid" style="display:none">
+<div class="stat-card"><div class="stat-label">APIs Queried</div><div class="stat-value" id="totalApis">0</div></div>
+<div class="stat-card"><div class="stat-label">Face Matches</div><div class="stat-value active" id="matchCount">0</div></div>
+<div class="stat-card"><div class="stat-label">Sources Found</div><div class="stat-value info" id="sourceCount">0</div></div>
+<div class="stat-card"><div class="stat-label">Metadata</div><div class="stat-value warning" id="metaCount">0</div></div>
+<div class="stat-card"><div class="stat-label">Failed</div><div class="stat-value error" id="failCount">0</div></div>
+</div>
+
+<div class="results-container" id="resultsContainer">
+<div class="results-header">
+<div class="results-title">Face Intelligence Report</div>
+<div class="results-actions">
+<button class="action-btn" onclick="generatePDF()">📄 Export PDF</button>
+<button class="action-btn" onclick="downloadJSON()">💾 Download JSON</button>
+<button class="action-btn danger" onclick="clearResults()">🗑 Clear All</button>
+</div>
+</div>
+
+<div class="language-selector" id="languageSelector">
+<button class="lang-btn active" onclick="setLanguage('english')">English</button>
+<button class="lang-btn" onclick="setLanguage('hausa')">Hausa</button>
+<button class="lang-btn" onclick="setLanguage('pidgin')">Pidgin</button>
+</div>
+
+<div id="faceCompare" class="face-compare" style="display:none"></div>
+
+<div id="matchGallery" class="match-grid" style="display:none"></div>
+
+<div class="tab-container">
+<div class="tab-buttons">
+<button class="tab-btn active" onclick="switchTab('reverse')">🔍 Reverse Image Search</button>
+<button class="tab-btn" onclick="switchTab('face')">👤 Face Recognition</button>
+<button class="tab-btn" onclick="switchTab('metadata')">📋 Metadata & EXIF</button>
+<button class="tab-btn" onclick="switchTab('video')">🎥 Video Analysis</button>
+</div>
+
+<div class="tab-content active" id="tab-reverse"><div id="reverseResults" class="api-grid"></div></div>
+<div class="tab-content" id="tab-face"><div id="faceResults" class="api-grid"></div></div>
+<div class="tab-content" id="tab-metadata"><div id="metaResults" class="api-grid"></div></div>
+<div class="tab-content" id="tab-video"><div id="videoResults" class="api-grid"></div></div>
+</div>
+
+<div class="map-container" id="mapContainer">
+<iframe id="mapFrame" width="100%" height="100%" frameborder="0" style="border:0" allowfullscreen></iframe>
+</div>
+
+<div class="summary-section">
+<div class="summary-title">📋 Face Intelligence Summary</div>
+<div class="summary-content" id="summaryContent">No data available yet. Upload a face image to begin investigation.</div>
+</div>
+</div>
+
+</div>
+
+<div class="modal" id="loadingModal">
+<div class="modal-content">
+<div class="modal-title">🔍 Searching Face Databases</div>
+<div class="loading-spinner"><div class="spinner"></div></div>
+<p style="text-align:center;color:#8b949e" id="loadingStatus">Searching across reverse image and face recognition databases...</p>
+</div>
+</div>
+
+<script>
+const API_PASSWORD = '@dss/v1';
+const WORKER_URL = 'https://security.pages.dev/api/face.js';
+let currentImageData = null;
+let currentMethod = 'upload';
+let allResults = {};
+let language = 'english';
+let matchCount = 0;
+
+const translations = {
+english:{searching:'Searching...',success:'Match Found',fail:'No Match',face:'Face Detected',metadata:'Metadata Extracted',video:'Video Analyzed',summary_header:'Face Intelligence Summary',matches_found:'Face matches found across databases',no_matches:'No matches found',identity_possible:'Possible Identity: %name%',forensic_ok:'Image is authentic',forensic_suspicious:'Image may be manipulated',social_media:'Social Media Accounts Found',no_social:'No Social Media Accounts'},
+hausa:{searching:'Ana bincike...',success:'An Samu Matching',fail:'Babu Matching',face:'An Gane Fuska',metadata:'An Ciro Metadata',video:'An Bincika Video',summary_header:'Takaitaccen Bayanin Fuska',matches_found:'An samu matching fuska a cikin databases',no_matches:'Babu matching',identity_possible:'Mai yiwuwa shine: %name%',forensic_ok:'Hoton gaskiya ne',forensic_suspicious:'An iya canza hoton',social_media:'An Samu Social Media Accounts',no_social:'Babu Social Media Accounts'},
+pidgin:{searching:'De search...',success:'Match Dey',fail:'No Match',face:'Face Dey',metadata:'Metadata Don Ready',video:'Video Don Analyze',summary_header:'Face Intelligence Summary',matches_found:'Face matches dey for database',no_matches:'No match o',identity_possible:'Maybe na: %name%',forensic_ok:'Image na real',forensic_suspicious:'Image fit don change',social_media:'Social Media Account Dey',no_social:'No Social Media Account'}
+};
+
+function t(key){return translations[language]?.[key]||key}
+
+function setLanguage(lang){
+language=lang;
+document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));
+document.querySelector(`.lang-btn[onclick="setLanguage('${lang}')"]`).classList.add('active');
+if(Object.keys(allResults).length > 0) generateSummary();
+}
+
+function selectMethod(method){
+currentMethod=method;
+document.querySelectorAll('.method-btn').forEach(b=>b.classList.remove('active'));
+document.querySelector(`.method-btn[data-method="${method}"]`).classList.add('active');
+document.getElementById('uploadMethod').style.display=method==='upload'?'block':'none';
+document.getElementById('urlMethod').style.display=method==='url'?'block':'none';
+document.getElementById('videoMethod').style.display=method==='video'?'block':'none';
+}
+
+function switchTab(tab){
+document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+document.querySelector(`.tab-btn[onclick*='${tab}']`).classList.add('active');
+document.getElementById(`tab-${tab}`).classList.add('active');
+}
+
+const uploadArea = document.getElementById('uploadArea');
+const fileInput = document.getElementById('fileInput');
+
+uploadArea.addEventListener('click',()=>fileInput.click());
+uploadArea.addEventListener('dragover',(e)=>{e.preventDefault();uploadArea.classList.add('dragover');});
+uploadArea.addEventListener('dragleave',()=>uploadArea.classList.remove('dragover'));
+uploadArea.addEventListener('drop',(e)=>{e.preventDefault();uploadArea.classList.remove('dragover');if(e.dataTransfer.files.length)handleFile(e.dataTransfer.files[0]);});
+fileInput.addEventListener('change',(e)=>{if(e.target.files.length)handleFile(e.target.files[0]);});
+
+function handleFile(file){
+if(!file.type.startsWith('image/')){alert('Please upload an image file');return;}
+if(file.size > 10*1024*1024){alert('File too large. Max 10MB');return;}
+const reader = new FileReader();
+reader.onload = function(e){
+currentImageData = e.target.result.split(',')[1];
+document.getElementById('previewImg').src = e.target.result;
+document.getElementById('previewName').textContent = file.name;
+document.getElementById('previewSize').textContent = `${(file.size/1024).toFixed(1)} KB`;
+document.getElementById('uploadPreview').classList.add('active');
+uploadArea.style.display = 'none';
+};
+reader.readAsDataURL(file);
+}
+
+function removeImage(){
+currentImageData = null;
+document.getElementById('uploadPreview').classList.remove('active');
+uploadArea.style.display = 'block';
+fileInput.value = '';
+}
+
+const API_ENDPOINTS = {
+reverse_image:[
+{name:'Google Reverse Image',url:'https://www.google.com/searchbyimage?image_url={url}',method:'GET',category:'reverse'},
+{name:'PimEyes Face Search',url:'https://pimeyes.com/api/upload',method:'POST',category:'reverse'},
+{name:'FaceCheck.ID',url:'https://facecheck.id/api/v1/search',method:'POST',category:'reverse'},
+{name:'TinEye',url:'https://api.tineye.com/rest/search/?image_url={url}',method:'GET',category:'reverse'},
+{name:'Bing Visual Search',url:'https://api.bing.microsoft.com/v7.0/images/search?q={url}',method:'GET',category:'reverse'},
+{name:'Yandex Images',url:'https://yandex.com/images/search?url={url}',method:'GET',category:'reverse'},
+{name:'Social Catfish',url:'https://socialcatfish.com/api/reverse-image',method:'POST',category:'reverse'}
+],
+face_recognition:[
+{name:'PimEyes Face Match',url:'https://pimeyes.com/api/face/search',method:'POST',category:'face'},
+{name:'FaceCheck Identity',url:'https://facecheck.id/api/v1/identity',method:'POST',category:'face'},
+{name:'Facebook Face Search',url:'https://graph.facebook.com/v18.0/search?q={url}&type=photo',method:'GET',category:'face'},
+{name:'Instagram Face Search',url:'https://www.instagram.com/web/search/topsearch/?query={url}',method:'GET',category:'face'},
+{name:'Twitter Face Search',url:'https://api.twitter.com/2/users/by/image/{url}',method:'GET',category:'face'},
+{name:'LinkedIn Face Search',url:'https://www.linkedin.com/search/results/people/?keywords={url}',method:'GET',category:'face'}
+],
+metadata:[
+{name:'ExifTool Metadata',url:'https://exifdata.com/api/{image}',method:'GET',category:'metadata'},
+{name:'Jeffrey Exif Viewer',url:'https://exif.regex.info/api/{image}',method:'GET',category:'metadata'},
+{name:'ImgOps Analysis',url:'https://imgops.com/{image_url}',method:'GET',category:'metadata'},
+{name:'Forensically',url:'https://29a.ch/photo-forensics/api/{image}',method:'GET',category:'metadata'}
+],
+video:[
+{name:'YouTube Data API',url:'https://www.googleapis.com/youtube/v3/search?q={video_id}',method:'GET',category:'video'},
+{name:'VideoAnalyzer',url:'https://videoanalyzer.com/api/{video_url}',method:'GET',category:'video'},
+{name:'InVID Verification',url:'https://api.invid-project.eu/api/verify/{video}',method:'GET',category:'video'}
+],
+telegram_bots:[
+{name:'Reverse Image Bot','bot':'@ReverseImageBot',category:'reverse'},
+{name:'FaceCheck Bot','bot':'@FaceCheckBot',category:'face'},
+{name:'Exif Reader Bot','bot':'@ExifReaderBot',category:'metadata'},
+{name:'Image Analyzer Bot','bot':'@ImageAnalyzerBot',category:'metadata'}
+]
+};
+
+async function queryAPI(endpoint, imageData){
+const url = endpoint.url.replace('{url}', encodeURIComponent(imageData)).replace('{image}', imageData).replace('{video_id}', imageData).replace('{video_url}', encodeURIComponent(imageData));
+const startTime = Date.now();
+try{
+const response = await fetch(WORKER_URL, {
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({
+password:API_PASSWORD,
+type:'api',
+target:url,
+method:endpoint.method||'GET',
+name:endpoint.name,
+category:endpoint.category,
+imageData: currentImageData
+})
+});
+const data = await response.json();
+return{success:data.success,data:data.data||data,time:Date.now()-startTime};
+}catch(e){
+return{success:false,error:e.message,time:Date.now()-startTime};
+}
+}
+
+async function queryTelegramBot(bot, imageUrl){
+const startTime = Date.now();
+try{
+const response = await fetch(WORKER_URL, {
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({
+password:API_PASSWORD,
+type:'telegram',
+bot:bot.bot,
+image:imageUrl,
+name:bot.name
+})
+});
+const data = await response.json();
+return{success:true,data:data.data||data,time:Date.now()-startTime};
+}catch(e){
+return{success:false,error:e.message,time:Date.now()-startTime};
+}
+}
+
+async function startInvestigation(){
+let query = '';
+if(currentMethod==='upload'){
+if(!currentImageData){alert('Please upload an image first');return;}
+query = 'uploaded_image';
+} else if(currentMethod==='url'){
+query = document.getElementById('urlInput').value.trim();
+if(!query){alert('Please enter an image URL');return;}
+} else {
+query = document.getElementById('videoInput').value.trim();
+if(!query){alert('Please enter a video URL');return;}
+}
+
+document.getElementById('searchBtn').disabled = true;
+document.getElementById('searchBtn').textContent = '⏳ Searching...';
+document.getElementById('loadingModal').classList.add('active');
+document.getElementById('resultsContainer').classList.remove('active');
+document.getElementById('statsGrid').style.display = 'none';
+document.getElementById('faceCompare').style.display = 'none';
+document.getElementById('matchGallery').style.display = 'none';
+allResults = {};
+matchCount = 0;
+
+let total = 0, success = 0, fail = 0, metaFields = 0;
+let totalTime = 0;
+const resultsByCategory = {reverse:[],face:[],metadata:[],video:[]};
+
+const allApis = [
+...API_ENDPOINTS.reverse_image,
+...API_ENDPOINTS.face_recognition,
+...API_ENDPOINTS.metadata,
+...API_ENDPOINTS.video,
+...API_ENDPOINTS.telegram_bots
+];
+
+for(const api of allApis){
+total++;
+document.getElementById('loadingStatus').textContent = `Searching ${api.name}...`;
+
+let result;
+if(api.bot){
+result = await queryTelegramBot(api, query);
+} else {
+result = await queryAPI(api, query);
+}
+
+totalTime += result.time;
+if(result.success){
+success++;
+if(result.data && result.data.matches) matchCount += result.data.matches.length;
+if(result.data && result.data.exif) metaFields += Object.keys(result.data.exif).length;
+} else {
+fail++;
+}
+
+const cat = api.category || 'reverse';
+if(resultsByCategory[cat]) resultsByCategory[cat].push({...api, result});
+allResults[api.name] = result;
+}
+
+document.getElementById('totalApis').textContent = total;
+document.getElementById('matchCount').textContent = matchCount;
+document.getElementById('sourceCount').textContent = success;
+document.getElementById('metaCount').textContent = metaFields;
+document.getElementById('failCount').textContent = fail;
+
+document.getElementById('loadingModal').classList.remove('active');
+document.getElementById('statsGrid').style.display = 'grid';
+document.getElementById('resultsContainer').classList.add('active');
+document.getElementById('searchBtn').disabled = false;
+document.getElementById('searchBtn').textContent = '🔍 Search Face Across All Databases';
+
+if(currentMethod==='upload' && currentImageData){
+showFaceCompare();
+}
+
+renderResults('reverseResults', resultsByCategory.reverse);
+renderFaceResults(resultsByCategory.face);
+renderMetaResults(resultsByCategory.metadata);
+renderResults('videoResults', resultsByCategory.video);
+generateSummary();
+}
+
+function showFaceCompare(){
+const container = document.getElementById('faceCompare');
+container.style.display = 'flex';
+container.innerHTML = `
+<div class="face-col">
+<img src="data:image/jpeg;base64,${currentImageData}" alt="Uploaded Face">
+<div class="label">Uploaded Image</div>
+</div>
+<div class="face-col">
+<div style="font-size:40px;color:#bc8cff;margin-top:40px">→</div>
+</div>
+<div class="face-col">
+<div style="width:120px;height:140px;background:#0d1117;border:2px solid #30363d;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:40px;color:#484f58">${matchCount > 0 ? '✅' : '❌'}</div>
+<div class="label">Matches Found</div>
+<div class="match-percent">${matchCount}</div>
+</div>
+`;
+}
+
+function renderResults(containerId, apis){
+const container = document.getElementById(containerId);
+container.innerHTML = '';
+if(!apis||!apis.length){container.innerHTML='<div style="color:#484f58;padding:20px;text-align:center">No data available</div>';return;}
+for(const api of apis){
+const card = document.createElement('div');
+card.className = `api-card ${api.result.success?'photo-match':''}`;
+const header = document.createElement('div');
+header.className = 'api-card-header';
+header.onclick=function(){this.nextElementSibling.classList.toggle('active')};
+const badge = document.createElement('span');
+badge.className = `badge ${api.result.success?'found':'not-found'}`;
+badge.textContent = api.result.success ? 'MATCHES' : 'NONE';
+header.innerHTML=`<h3>${api.name}</h3>`;
+header.appendChild(badge);
+const status=document.createElement('div');
+status.className=`api-status ${api.result.success?'success':'error'}`;
+header.appendChild(status);
+card.appendChild(header);
+const body=document.createElement('div');
+body.className='api-card-body';
+const dataDiv=document.createElement('div');
+dataDiv.className='api-data highlight';
+if(api.result.success && api.result.data){
+const data = api.result.data;
+if(data.matches && data.matches.length > 0){
+dataDiv.innerHTML = data.matches.slice(0,5).map(m => `
+<div style="padding:8px;background:#0d1117;margin-bottom:6px;border-radius:4px;border-left:3px solid #bc8cff">
+<div style="font-size:13px;color:#c9d1d9"><strong>${m.name||m.title||'Match'}</strong></div>
+<div style="font-size:11px;color:#484f58">${m.source||m.url||'Unknown source'}</div>
+<div style="font-size:11px;color:#bc8cff">Score: ${m.score||m.confidence||'N/A'}%</div>
+</div>
+`).join('');
+} else {
+dataDiv.textContent = JSON.stringify(data,null,2).substring(0,500);
+}
+} else {
+dataDiv.style.color='#f85149';
+dataDiv.textContent = `No results: ${api.result.error||'Search completed with no matches'}`;
+}
+body.appendChild(dataDiv);
+card.appendChild(body);
+container.appendChild(card);
+}
+}
+
+function renderFaceResults(apis){
+const container = document.getElementById('faceResults');
+container.innerHTML = '';
+if(!apis||!apis.length){container.innerHTML='<div style="color:#484f58;padding:20px;text-align:center">No face recognition data</div>';return;}
+const gallery = document.createElement('div');
+gallery.className = 'match-grid';
+let hasMatches = false;
+for(const api of apis){
+if(api.result.success && api.result.data && api.result.data.matches){
+hasMatches = true;
+for(const match of api.result.data.matches.slice(0,3)){
+const card = document.createElement('div');
+card.className = 'match-card';
+card.innerHTML = `
+<img src="${match.thumbnail||match.image||'https://via.placeholder.com/200'}" onerror="this.src='https://via.placeholder.com/200'" alt="Match">
+<div class="match-info">
+<div class="match-source">${api.name}</div>
+<div class="match-name">${match.name||'Unknown'}</div>
+<div class="match-score">${match.score||match.confidence||'?'}% match</div>
+</div>
+`;
+card.onclick = function(){window.open(match.url||match.link,'_blank');};
+gallery.appendChild(card);
+}
+}
+}
+if(!hasMatches){
+const card = document.createElement('div');
+card.style.cssText = 'grid-column:1/-1;text-align:center;padding:40px;color:#484f58';
+card.textContent = 'No face matches found across any database';
+gallery.appendChild(card);
+}
+container.appendChild(gallery);
+const card = document.createElement('div');
+card.style.cssText = 'grid-column:1/-1;margin-top:16px';
+const header = document.createElement('div');
+header.className = 'api-card-header';
+header.innerHTML='<h3>Raw Face API Results</h3>';
+const status=document.createElement('div');
+status.className='api-status success';
+header.appendChild(status);
+card.appendChild(header);
+const body=document.createElement('div');
+body.className='api-card-body active';
+for(const api of apis){
+const dataDiv=document.createElement('div');
+dataDiv.className='api-data highlight';
+dataDiv.style.marginBottom='8px';
+dataDiv.textContent = `${api.name}: ${api.result.success?JSON.stringify(api.result.data,null,2).substring(0,300):'No data'}`;
+body.appendChild(dataDiv);
+}
+card.appendChild(body);
+container.appendChild(card);
+}
+
+function renderMetaResults(apis){
+const container = document.getElementById('metaResults');
+container.innerHTML = '';
+if(!apis||!apis.length){container.innerHTML='<div style="color:#484f58;padding:20px;text-align:center">No metadata available</div>';return;}
+for(const api of apis){
+const card = document.createElement('div');
+card.className = 'api-card';
+const header = document.createElement('div');
+header.className = 'api-card-header';
+header.onclick=function(){this.nextElementSibling.classList.toggle('active')};
+header.innerHTML=`<h3>${api.name}</h3>`;
+const status=document.createElement('div');
+status.className=`api-status ${api.result.success?'warning':'error'}`;
+header.appendChild(status);
+card.appendChild(header);
+const body=document.createElement('div');
+body.className='api-card-body';
+const dataDiv=document.createElement('div');
+dataDiv.className='api-data highlight';
+if(api.result.success && api.result.data){
+const data = api.result.data;
+if(data.exif || data.metadata || data.gps){
+const gps = data.gps || data.exif?.gps;
+dataDiv.innerHTML = `
+<div class="forensic-grid">
+${data.camera ? `<div class="forensic-item"><div class="f-label">Camera</div><div class="f-value">${data.camera}</div></div>`:''}
+${data.date ? `<div class="forensic-item"><div class="f-label">Date Taken</div><div class="f-value">${data.date}</div></div>`:''}
+${data.exif?.make ? `<div class="forensic-item"><div class="f-label">Make</div><div class="f-value">${data.exif.make}</div></div>`:''}
+${data.exif?.model ? `<div class="forensic-item"><div class="f-label">Model</div><div class="f-value">${data.exif.model}</div></div>`:''}
+${gps?.lat ? `<div class="forensic-item"><div class="f-label">GPS Lat</div><div class="f-value">${gps.lat}</div></div>`:''}
+${gps?.lng ? `<div class="forensic-item"><div class="f-label">GPS Lng</div><div class="f-value">${gps.lng}</div></div>`:''}
+${data.exif?.software ? `<div class="forensic-item"><div class="f-label">Software</div><div class="f-value">${data.exif.software}</div></div>`:''}
+${data.exif?.orientation ? `<div class="forensic-item"><div class="f-label">Orientation</div><div class="f-value">${data.exif.orientation}</div></div>`:''}
+</div>
+`;
+if(gps?.lat && gps?.lng){
+document.getElementById('mapContainer').classList.add('active');
+document.getElementById('mapFrame').src = `https://www.openstreetmap.org/export/embed.html?layer=mapnik&marker=${gps.lat},${gps.lng}&zoom=15`;
+}
+} else {
+dataDiv.textContent = JSON.stringify(data,null,2).substring(0,500);
+}
+} else {
+dataDiv.style.color='#f85149';
+dataDiv.textContent = `No metadata: ${api.result.error||'No EXIF data found'}`;
+}
+body.appendChild(dataDiv);
+card.appendChild(body);
+container.appendChild(card);
+}
+}
+
+function generateSummary(){
+if(Object.keys(allResults).length === 0) return;
+const summary = document.getElementById('summaryContent');
+let found = Object.values(allResults).filter(v=>v.success).length;
+summary.innerHTML = `
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+<div style="padding:8px 20px;border-radius:20px;background:${matchCount>0?'rgba(188,140,255,0.2)':'rgba(248,81,73,0.2)'};border:1px solid ${matchCount>0?'#bc8cff':'#f85149'};color:${matchCount>0?'#bc8cff':'#f85149'};font-weight:600;font-size:14px">
+${matchCount > 0 ? 'IDENTITY FOUND' : 'NO MATCHES'}
+</div>
+<div style="font-size:12px;color:#8b949e">Face Search Result</div>
+</div>
+<div style="margin-bottom:12px"><strong>Method:</strong> ${currentMethod.toUpperCase()}</div>
+<div style="margin-bottom:8px"><strong>Face Matches Found:</strong> ${matchCount}</div>
+<div style="margin-bottom:8px"><strong>Databases Searched:</strong> ${Object.keys(allResults).length}</div>
+<div style="margin-bottom:8px"><strong>Successful Queries:</strong> ${found}</div>
+<div style="margin-top:12px;padding-top:12px;border-top:1px solid #30363d;font-size:12px;color:#484f58">
+${t('searching')} ${Object.keys(allResults).length} APIs • ${matchCount} matches • ${Object.values(allResults).filter(v=>!v.success).length} failed
+</div>
+`;
+}
+
+function generatePDF(){
+if(Object.keys(allResults).length === 0){alert('No data to export.');return;}
+let report = `DSS FACE INTELLIGENCE REPORT\n=============================\nDate: ${new Date().toISOString()}\nMethod: ${currentMethod}\nMatches Found: ${matchCount}\n\n--- RESULTS ---\n\n`;
+for(const[name,result] of Object.entries(allResults)){
+report+=`${name}: ${result.success?'DATA':'NONE'}\n`;
+if(result.success) report+=`${JSON.stringify(result.data,null,2).substring(0,300)}\n`;
+report+=`\n---\n\n`;
+}
+const blob=new Blob([report],{type:'text/plain'});
+const url=URL.createObjectURL(blob);
+const a=document.createElement('a');
+a.href=url;
+a.download=`DSS_Face_Report_${Date.now()}.txt`;
+a.click();
+URL.revokeObjectURL(url);
+}
+
+function downloadJSON(){
+if(Object.keys(allResults).length === 0){alert('No data to export.');return;}
+const blob=new Blob([JSON.stringify(allResults,null,2)],{type:'application/json'});
+const url=URL.createObjectURL(blob);
+const a=document.createElement('a');
+a.href=url;
+a.download=`DSS_Face_Data_${Date.now()}.json`;
+a.click();
+URL.revokeObjectURL(url);
+}
+
+function clearResults(){
+allResults={};matchCount=0;
+document.getElementById('resultsContainer').classList.remove('active');
+document.getElementById('statsGrid').style.display='none';
+document.getElementById('faceCompare').style.display='none';
+document.getElementById('matchGallery').style.display='none';
+document.getElementById('mapContainer').classList.remove('active');
+removeImage();
+document.getElementById('urlInput').value='';
+document.getElementById('videoInput').value='';
+document.querySelectorAll('.api-grid').forEach(g=>g.innerHTML='');
+document.getElementById('summaryContent').textContent='No data available yet. Upload a face image to begin investigation.';
+}
+</script>
+</body>
+</html>
