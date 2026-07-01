@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>DSS IP & Device Intelligence System v2.0</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#0a0e17;color:#e0e6ed;min-height:100vh}
+.container{max-width:1400px;margin:0 auto;padding:20px}
+.header{background:linear-gradient(135deg,#0d1117 0%,#161b22 100%);border-bottom:1px solid #30363d;padding:15px 0;position:sticky;top:0;z-index:100}
+.header-content{display:flex;align-items:center;justify-content:space-between;max-width:1400px;margin:0 auto;padding:0 20px}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-icon{width:40px;height:40px;background:linear-gradient(135deg,#da3633,#f85149);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:bold}
+.logo-text{font-size:20px;font-weight:600;background:linear-gradient(135deg,#da3633,#f85149);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header-badge{background:#21262d;border:1px solid #30363d;border-radius:6px;padding:6px 12px;font-size:12px;color:#8b949e}
+.search-section{background:linear-gradient(135deg,#161b22 0%,#1c2128 100%);border:1px solid #30363d;border-radius:12px;padding:30px;margin:20px 0}
+.search-title{font-size:18px;font-weight:600;margin-bottom:20px;color:#c9d1d9}
+.search-box{display:flex;gap:12px;flex-wrap:wrap}
+.search-input{flex:1;min-width:280px;padding:14px 18px;background:#0d1117;border:2px solid #30363d;border-radius:8px;color:#e0e6ed;font-size:16px;transition:all 0.3s}
+.search-input:focus{border-color:#f85149;outline:none;box-shadow:0 0 0 3px rgba(248,81,73,0.15)}
+.search-btn{padding:14px 32px;background:linear-gradient(135deg,#da3633,#f85149);border:none;border-radius:8px;color:#fff;font-size:16px;font-weight:600;cursor:pointer;transition:all 0.3s}
+.search-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(248,81,73,0.3)}
+.search-btn:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+.password-hint{font-size:11px;color:#484f58;margin-top:8px;font-family:monospace}
+.search-method{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.method-btn{padding:8px 18px;border-radius:6px;border:1px solid #30363d;background:#0d1117;color:#8b949e;font-size:13px;cursor:pointer;transition:all 0.2s}
+.method-btn:hover{border-color:#f85149;color:#f85149}
+.method-btn.active{background:rgba(248,81,73,0.15);border-color:#f85149;color:#f85149}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:20px 0}
+.stat-card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px}
+.stat-label{font-size:12px;color:#8b949e;text-transform:uppercase;letter-spacing:0.5px}
+.stat-value{font-size:24px;font-weight:700;color:#c9d1d9;margin-top:4px}
+.stat-value.active{color:#3fb950}
+.stat-value.error{color:#f85149}
+.stat-value.info{color:#58a6ff}
+.results-container{display:none}
+.results-container.active{display:block}
+.results-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.results-title{font-size:18px;font-weight:600;color:#c9d1d9}
+.results-actions{display:flex;gap:8px}
+.action-btn{padding:8px 16px;border-radius:6px;border:1px solid #30363d;background:#21262d;color:#c9d1d9;font-size:13px;cursor:pointer;transition:all 0.2s}
+.action-btn:hover{background:#30363d}
+.action-btn.primary{background:#1f6feb;border-color:#1f6feb;color:#fff}
+.action-btn.primary:hover{background:#388bfd}
+.action-btn.danger{background:#da3633;border-color:#da3633;color:#fff}
+.action-btn.danger:hover{background:#f85149}
+.api-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:12px;margin-bottom:20px}
+.api-card{background:#161b22;border:1px solid #30363d;border-radius:8px;overflow:hidden;transition:all 0.3s}
+.api-card:hover{border-color:#f85149}
+.api-card.threat{background:rgba(248,81,73,0.05);border-color:#f85149}
+.api-card-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #30363d;cursor:pointer}
+.api-card-header h3{font-size:14px;font-weight:600;color:#c9d1d9;display:flex;align-items:center;gap:8px}
+.api-card-header .badge{font-size:10px;padding:2px 8px;border-radius:10px;background:#21262d;color:#8b949e;margin-left:8px}
+.api-card-header .badge.found{background:rgba(63,185,80,0.2);color:#3fb950}
+.api-card-header .badge.not-found{background:rgba(248,81,73,0.2);color:#f85149}
+.api-card-header .badge.threat{background:rgba(248,81,73,0.3);color:#f85149;animation:pulse 2s infinite}
+.api-status{width:8px;height:8px;border-radius:50%}
+.api-status.success{background:#3fb950;box-shadow:0 0 6px rgba(63,185,80,0.4)}
+.api-status.error{background:#f85149;box-shadow:0 0 6px rgba(248,81,73,0.4)}
+.api-status.loading{background:#d29922;animation:pulse 1.5s infinite}
+.api-status.warning{background:#d29922;box-shadow:0 0 6px rgba(210,153,34,0.4)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.api-card-body{padding:16px;display:none}
+.api-card-body.active{display:block}
+.api-data{padding:12px;background:#0d1117;border-radius:6px;font-family:monospace;font-size:12px;line-height:1.6;color:#8b949e;white-space:pre-wrap;word-break:break-word;max-height:200px;overflow-y:auto}
+.api-data.highlight{color:#c9d1d9}
+.api-data.threat-text{color:#f85149;font-weight:600}
+.map-section{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:20px;margin:16px 0}
+.map-title{font-size:16px;font-weight:600;color:#c9d1d9;margin-bottom:16px}
+.map-container{height:450px;border-radius:8px;overflow:hidden;border:1px solid #30363d}
+.location-info{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.location-card{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:12px;text-align:center}
+.location-card .lbl{font-size:10px;color:#484f58;text-transform:uppercase}
+.location-card .val{font-size:18px;font-weight:700;color:#c9d1d9;margin-top:4px}
+.location-card .val.coords{color:#58a6ff;font-size:14px}
+.device-info{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:16px 0}
+.device-card{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:16px}
+.device-card .dev-label{font-size:11px;color:#484f58}
+.device-card .dev-value{font-size:14px;color:#c9d1d9;margin-top:4px}
+.device-card .dev-value.org{color:#58a6ff}
+.threat-alert{padding:16px;background:rgba(248,81,73,0.1);border:1px solid rgba(248,81,73,0.3);border-radius:8px;margin:16px 0;display:flex;align-items:center;gap:12px}
+.threat-alert .alert-icon{font-size:28px}
+.threat-alert .alert-text{font-size:14px;color:#f85149;font-weight:500}
+.threat-alert .alert-detail{font-size:12px;color:#8b949e;margin-top:4px}
+.summary-section{background:linear-gradient(135deg,#161b22,#1c2128);border:1px solid #30363d;border-radius:12px;padding:24px;margin:20px 0}
+.summary-title{font-size:18px;font-weight:600;margin-bottom:16px;color:#c9d1d9}
+.summary-content{font-size:14px;line-height:1.8;color:#8b949e}
+.summary-content strong{color:#c9d1d9}
+.language-selector{display:flex;gap:8px;margin:16px 0}
+.lang-btn{padding:6px 14px;border-radius:4px;border:1px solid #30363d;background:transparent;color:#8b949e;font-size:12px;cursor:pointer;transition:all 0.2s}
+.lang-btn:hover{border-color:#f85149;color:#f85149}
+.lang-btn.active{background:#da3633;border-color:#da3633;color:#fff}
+.tab-container{margin:20px 0}
+.tab-buttons{display:flex;gap:4px;margin-bottom:16px;overflow-x:auto}
+.tab-btn{padding:10px 20px;border:1px solid #30363d;background:#0d1117;color:#8b949e;font-size:13px;cursor:pointer;border-radius:8px 8px 0 0;transition:all 0.2s;white-space:nowrap}
+.tab-btn.active{background:#161b22;color:#c9d1d9;border-bottom-color:#161b22;border-top-color:#f85149}
+.tab-btn:hover{background:#1c2128}
+.tab-content{display:none}
+.tab-content.active{display:block}
+@media(max-width:768px){.search-box{flex-direction:column}.search-input{min-width:auto}.api-grid{grid-template-columns:1fr}.tab-buttons{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+
+<div class="header">
+<div class="header-content">
+<div class="logo">
+<div class="logo-icon">I</div>
+<div class="logo-text">DSS IP & Device Intelligence v2.0</div>
+</div>
+<div class="header-badge">SECURE • AUTHORIZED ACCESS ONLY</div>
+</div>
+</div>
+
+<div class="container">
+
+<div class="search-section">
+<div class="search-title">IP Address & Device Intelligence Search</div>
+<div class="search-method" id="searchMethod">
+<button class="method-btn active" data-method="ip" onclick="selectMethod('ip')">🌐 IP Address</button>
+<button class="method-btn" data-method="uuid" onclick="selectMethod('uuid')">🔑 UUID / MAC</button>
+<button class="method-btn" data-method="domain" onclick="selectMethod('domain')">📡 Domain / URL</button>
+<button class="method-btn" data-method="wec" onclick="selectMethod('wec')">💻 WEC / User Agent</button>
+</div>
+<div class="search-box">
+<input type="text" class="search-input" id="searchInput" placeholder="Enter IP Address (e.g., 192.168.1.1 or 8.8.8.8)">
+<button class="search-btn" id="searchBtn" onclick="startInvestigation()">🔍 Track Device</button>
+</div>
+<div class="password-hint">Authentication: @dss/v1 • All requests are encrypted and logged</div>
+</div>
+
+<div class="stats-grid" id="statsGrid" style="display:none">
+<div class="stat-card"><div class="stat-label">APIs Queried</div><div class="stat-value" id="totalApis">0</div></div>
+<div class="stat-card"><div class="stat-label">Geolocation</div><div class="stat-value active" id="geoStatus">Pending</div></div>
+<div class="stat-card"><div class="stat-label">Threat Score</div><div class="stat-value warning" id="threatScore">0</div></div>
+<div class="stat-card"><div class="stat-label">Open Ports</div><div class="stat-value info" id="portCount">0</div></div>
+<div class="stat-card"><div class="stat-label">Failed</div><div class="stat-value error" id="failCount">0</div></div>
+</div>
+
+<div class="results-container" id="resultsContainer">
+<div class="results-header">
+<div class="results-title">Device Intelligence Report: <span id="targetQuery" style="color:#f85149"></span> <span id="queryType" style="font-size:12px;color:#484f58"></span></div>
+<div class="results-actions">
+<button class="action-btn" onclick="generatePDF()">📄 Export PDF</button>
+<button class="action-btn" onclick="downloadJSON()">💾 Download JSON</button>
+<button class="action-btn danger" onclick="clearResults()">🗑 Clear All</button>
+</div>
+</div>
+
+<div class="language-selector" id="languageSelector">
+<button class="lang-btn active" onclick="setLanguage('english')">English</button>
+<button class="lang-btn" onclick="setLanguage('hausa')">Hausa</button>
+<button class="lang-btn" onclick="setLanguage('pidgin')">Pidgin</button>
+</div>
+
+<div id="threatAlert" class="threat-alert" style="display:none"></div>
+
+<div class="map-section">
+<div class="map-title">📍 Current Location on Map</div>
+<div class="location-info" id="locationInfo">
+<div class="location-card"><div class="lbl">Country</div><div class="val" id="locCountry">-</div></div>
+<div class="location-card"><div class="lbl">City</div><div class="val" id="locCity">-</div></div>
+<div class="location-card"><div class="lbl">ISP</div><div class="val" id="locISP">-</div></div>
+<div class="location-card"><div class="lbl">Coordinates</div><div class="val coords" id="locCoords">-</div></div>
+<div class="location-card"><div class="lbl">Timezone</div><div class="val" id="locTZ">-</div></div>
+<div class="location-card"><div class="lbl">Accuracy</div><div class="val" id="locAccuracy">-</div></div>
+</div>
+<div class="map-container" id="mapContainer">
+<iframe id="mapFrame" width="100%" height="100%" frameborder="0" style="border:0" allowfullscreen></iframe>
+</div>
+</div>
+
+<div class="device-info" id="deviceInfo" style="display:none">
+<div class="device-card"><div class="dev-label">Device Type</div><div class="dev-value" id="devType">-</div></div>
+<div class="device-card"><div class="dev-label">Operating System</div><div class="dev-value" id="devOS">-</div></div>
+<div class="device-card"><div class="dev-label">Browser</div><div class="dev-value" id="devBrowser">-</div></div>
+<div class="device-card"><div class="dev-label">Organization</div><div class="dev-value org" id="devOrg">-</div></div>
+<div class="device-card"><div class="dev-label">Hostname</div><div class="dev-value" id="devHostname">-</div></div>
+<div class="device-card"><div class="dev-label">AS Number</div><div class="dev-value" id="devAS">-</div></div>
+</div>
+
+<div class="tab-container">
+<div class="tab-buttons">
+<button class="tab-btn active" onclick="switchTab('geolocation')">📍 Geolocation</button>
+<button class="tab-btn" onclick="switchTab('threat')">⚠️ Threat Intelligence</button>
+<button class="tab-btn" onclick="switchTab('network')">🔌 Network & Ports</button>
+<button class="tab-btn" onclick="switchTab('history')">📜 History & DNS</button>
+</div>
+
+<div class="tab-content active" id="tab-geolocation"><div id="geoResults" class="api-grid"></div></div>
+<div class="tab-content" id="tab-threat"><div id="threatResults" class="api-grid"></div></div>
+<div class="tab-content" id="tab-network"><div id="networkResults" class="api-grid"></div></div>
+<div class="tab-content" id="tab-history"><div id="historyResults" class="api-grid"></div></div>
+</div>
+
+<div class="summary-section">
+<div class="summary-title">📋 Device Intelligence Summary</div>
+<div class="summary-content" id="summaryContent">No data available yet. Run an investigation to generate summary.</div>
+</div>
+</div>
+
+</div>
+
+<div class="modal" id="loadingModal">
+<div class="modal-content">
+<div class="modal-title">🔍 Tracking Device in Progress</div>
+<div class="loading-spinner"><div class="spinner"></div></div>
+<p style="text-align:center;color:#8b949e" id="loadingStatus">Querying IP databases and threat intelligence feeds...</p>
+</div>
+</div>
+
+<style>
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center}
+.modal.active{display:flex}
+.modal-content{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:30px;max-width:400px;width:90%}
+.modal-title{font-size:18px;font-weight:600;color:#c9d1d9;margin-bottom:20px;text-align:center}
+.loading-spinner{display:flex;justify-content:center;margin:20px 0}
+.spinner{width:40px;height:40px;border:3px solid #30363d;border-top-color:#f85149;border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+
+<script>
+const API_PASSWORD = '@dss/v1';
+const WORKER_URL = 'https://security.pages.dev/api/ip.js';
+let currentQuery = '';
+let currentMethod = 'ip';
+let allResults = {};
+let language = 'english';
+let currentLat = null;
+let currentLng = null;
+let threatScore = 0;
+let ports = 0;
+let consolidatedGeo = {};
+
+const translations = {
+  english: {
+    searching: 'Searching...',
+    success: 'Found',
+    fail: 'Not Found',
+    threat: 'Threat Detected',
+    clean: 'Clean',
+    location: 'Location Found',
+    device: 'Device Info',
+    ports: 'Open Ports',
+    summary_header: 'IP & Device Summary',
+    risk_high: 'HIGH RISK - Malicious Activity',
+    risk_medium: 'MEDIUM RISK - Suspicious',
+    risk_low: 'LOW RISK - Clean Device',
+    tracking: 'Device can be tracked',
+    not_tracked: 'Device location unknown'
+  },
+  hausa: {
+    searching: 'Ana bincike...',
+    success: 'An Samu',
+    fail: 'Ba a Samu ba',
+    threat: 'An Samu Barazana',
+    clean: 'Lafiya',
+    location: 'An Samu Wuri',
+    device: 'Bayanin Na\'ura',
+    ports: 'Budaddiyar Ports',
+    summary_header: 'Takaitaccen Bayanin IP',
+    risk_high: 'BABBAN HADARI - Ayyuka Masu Cutarwa',
+    risk_medium: 'MATSAKAICI HADARI - Shubuha',
+    risk_low: 'KANANAN HADARI - Lafiya',
+    tracking: 'Ana iya gano na\'urar',
+    not_tracked: 'Ba a gano wurin na\'urar ba'
+  },
+  pidgin: {
+    searching: 'De search...',
+    success: 'Found',
+    fail: 'Not Found',
+    threat: 'Wahala Dey',
+    clean: 'Clean',
+    location: 'Location Dey',
+    device: 'Device Info',
+    ports: 'Open Ports',
+    summary_header: 'IP & Device Summary',
+    risk_high: 'RISK HIGH - Bad Tin Dey',
+    risk_medium: 'RISK MEDIUM - Suspicious',
+    risk_low: 'RISK LOW - Clean',
+    tracking: 'Device fit to track',
+    not_tracked: 'No fit find device'
+  }
+};
+
+function t(key) {
+  return translations[language] && translations[language][key] !== undefined ? translations[language][key] : key;
+}
+
+function setLanguage(lang) {
+  language = lang;
+  document.querySelectorAll('.lang-btn').forEach(function(b) { b.classList.remove('active'); });
+  var btn = document.querySelector('.lang-btn[onclick="setLanguage(\'' + lang + '\')"]');
+  if (btn) btn.classList.add('active');
+  if (currentQuery) generateSummary();
+}
+
+function selectMethod(method) {
+  currentMethod = method;
+  document.querySelectorAll('.method-btn').forEach(function(b) { b.classList.remove('active'); });
+  var btn = document.querySelector('.method-btn[data-method="' + method + '"]');
+  if (btn) btn.classList.add('active');
+  var placeholders = {
+    ip: 'Enter IP Address (e.g., 8.8.8.8 or 192.168.1.1)',
+    uuid: 'Enter UUID, MAC Address or Device ID',
+    domain: 'Enter Domain or URL',
+    wec: 'Enter WEC ID or User Agent string'
+  };
+  document.getElementById('searchInput').placeholder = placeholders[method] || 'Enter identifier';
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+  var btns = document.querySelectorAll('.tab-btn');
+  for (var i = 0; i < btns.length; i++) {
+    if (btns[i].getAttribute('onclick') && btns[i].getAttribute('onclick').indexOf("'" + tab + "'") !== -1) {
+      btns[i].classList.add('active');
+      break;
+    }
+  }
+  var tabEl = document.getElementById('tab-' + tab);
+  if (tabEl) tabEl.classList.add('active');
+}
+
+const API_ENDPOINTS = {
+  geolocation: [
+    {name:'ip-api.com',url:'http://ip-api.com/json/{query}',method:'GET',category:'geo'},
+    {name:'ipinfo.io',url:'https://ipinfo.io/{query}/json',method:'GET',category:'geo'},
+    {name:'ip2location',url:'https://api.ip2location.com/v2/?ip={query}&key=demo',method:'GET',category:'geo'},
+    {name:'ipstack',url:'https://api.ipstack.com/{query}?access_key=demo',method:'GET',category:'geo'},
+    {name:'ipdata',url:'https://api.ipdata.co/{query}?api-key=demo',method:'GET',category:'geo'},
+    {name:'Abstract API',url:'https://ipgeolocation.abstractapi.com/v1/?api_key=demo&ip_address={query}',method:'GET',category:'geo'}
+  ],
+  threat: [
+    {name:'AbuseIPDB',url:'https://api.abuseipdb.com/api/v2/check?ipAddress={query}',method:'GET',category:'threat'},
+    {name:'VirusTotal',url:'https://www.virustotal.com/api/v3/ip_addresses/{query}',method:'GET',category:'threat'},
+    {name:'AlienVault OTX',url:'https://otx.alienvault.com/api/v1/indicators/IPv4/{query}/general',method:'GET',category:'threat'},
+    {name:'IBM X-Force',url:'https://api.xforce.ibmcloud.com/api/ipr/{query}',method:'GET',category:'threat'},
+    {name:'Greynoise',url:'https://api.greynoise.io/v3/community/{query}',method:'GET',category:'threat'}
+  ],
+  network: [
+    {name:'Shodan',url:'https://api.shodan.io/shodan/host/{query}?key=demo',method:'GET',category:'network'},
+    {name:'Censys',url:'https://search.censys.io/api/v2/hosts/{query}',method:'GET',category:'network'},
+    {name:'SecurityTrails',url:'https://api.securitytrails.com/v1/history/{query}/dns?apikey=demo',method:'GET',category:'network'}
+  ],
+  history: [
+    {name:'Reverse DNS',url:'https://api.viewdns.info/reversedns/?ip={query}&apikey=demo',method:'GET',category:'history'},
+    {name:'Whois Lookup',url:'https://api.whois.com/v1?ip={query}&apiKey=demo',method:'GET',category:'history'},
+    {name:'IP History',url:'https://www.ipaddress.com/ip-lookup/{query}',method:'GET',category:'history'}
+  ]
+};
+
+async function queryAPI(endpoint, query) {
+  var url = endpoint.url.replace('{query}', encodeURIComponent(query));
+  var startTime = Date.now();
+  try {
+    var response = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        password: API_PASSWORD,
+        type: 'api',
+        target: url,
+        method: endpoint.method || 'GET',
+        name: endpoint.name,
+        category: endpoint.category
+      })
+    });
+    var data = await response.json();
+    return {success: data.success, data: data.data || data, time: Date.now() - startTime};
+  } catch(e) {
+    return {success: false, error: e.message, time: Date.now() - startTime};
+  }
+}
+
+async function startInvestigation() {
+  var query = document.getElementById('searchInput').value.trim();
+  if (!query) {
+    alert('Please enter a valid IP address, UUID, MAC, Domain or Device ID');
+    return;
+  }
+
+  currentQuery = query;
+  document.getElementById('targetQuery').textContent = query;
+  document.getElementById('queryType').textContent = '(' + currentMethod.toUpperCase() + ')';
+  document.getElementById('searchBtn').disabled = true;
+  document.getElementById('searchBtn').textContent = '⏳ Tracking...';
+  document.getElementById('loadingModal').classList.add('active');
+  document.getElementById('resultsContainer').classList.remove('active');
+  document.getElementById('statsGrid').style.display = 'none';
+  document.getElementById('threatAlert').style.display = 'none';
+  document.getElementById('deviceInfo').style.display = 'none';
+  allResults = {};
+  threatScore = 0;
+  ports = 0;
+  consolidatedGeo = {};
+
+  var total = 0, success = 0, fail = 0;
+  var resultsByCategory = {geo: [], threat: [], network: [], history: []};
+  var consolidatedThreat = [];
+
+  var allApis = API_ENDPOINTS.geolocation.concat(API_ENDPOINTS.threat).concat(API_ENDPOINTS.network).concat(API_ENDPOINTS.history);
+
+  for (var i = 0; i < allApis.length; i++) {
+    var api = allApis[i];
+    total++;
+    document.getElementById('loadingStatus').textContent = 'Querying ' + api.name + '...';
+
+    var result = await queryAPI(api, query);
+
+    if (result.success) {
+      success++;
+      if (result.data) {
+        if (result.data.lat) consolidatedGeo.lat = result.data.lat;
+        if (result.data.lon) consolidatedGeo.lon = result.data.lon;
+        if (result.data.latitude) consolidatedGeo.lat = result.data.latitude;
+        if (result.data.longitude) consolidatedGeo.lng = result.data.longitude;
+        if (result.data.country) consolidatedGeo.country = result.data.country;
+        if (result.data.city) consolidatedGeo.city = result.data.city;
+        if (result.data.isp) consolidatedGeo.isp = result.data.isp;
+        if (result.data.org) consolidatedGeo.org = result.data.org;
+        if (result.data.timezone) consolidatedGeo.timezone = result.data.timezone;
+        if (result.data.zip) consolidatedGeo.zip = result.data.zip;
+        if (result.data.abuseConfidenceScore) threatScore = Math.max(threatScore, result.data.abuseConfidenceScore);
+        if (result.data.ports) ports += result.data.ports.length;
+        if (result.data.hostname) consolidatedGeo.hostname = result.data.hostname;
+        if (result.data.as) consolidatedGeo.as = result.data.as;
+        if (result.data.abuse_reports) consolidatedThreat = consolidatedThreat.concat(result.data.abuse_reports);
+      }
+    } else {
+      fail++;
+    }
+
+    var cat = api.category || 'geo';
+    if (resultsByCategory[cat]) {
+      resultsByCategory[cat].push({name: api.name, result: result, category: api.category});
+    }
+    allResults[api.name] = result;
+  }
+
+  document.getElementById('totalApis').textContent = total;
+  var geoStatusEl = document.getElementById('geoStatus');
+  geoStatusEl.textContent = consolidatedGeo.lat ? t('location') : t('not_tracked');
+  geoStatusEl.className = 'stat-value ' + (consolidatedGeo.lat ? 'active' : 'error');
+
+  var threatScoreEl = document.getElementById('threatScore');
+  threatScoreEl.textContent = threatScore;
+  threatScoreEl.className = 'stat-value ' + (threatScore > 50 ? 'error' : threatScore > 10 ? 'warning' : 'active');
+
+  document.getElementById('portCount').textContent = ports;
+  document.getElementById('failCount').textContent = fail;
+
+  document.getElementById('loadingModal').classList.remove('active');
+  document.getElementById('statsGrid').style.display = 'grid';
+  document.getElementById('resultsContainer').classList.add('active');
+  document.getElementById('searchBtn').disabled = false;
+  document.getElementById('searchBtn').textContent = '🔍 Track Device';
+
+  renderLocationInfo(consolidatedGeo);
+  renderMap(consolidatedGeo);
+  renderDeviceInfo(consolidatedGeo);
+  renderThreatAlert(threatScore, consolidatedThreat);
+  renderResults('geoResults', resultsByCategory.geo);
+  renderResults('threatResults', resultsByCategory.threat);
+  renderResults('networkResults', resultsByCategory.network);
+  renderResults('historyResults', resultsByCategory.history);
+  generateSummary();
+}
+
+function renderLocationInfo(geo) {
+  if (geo.country) document.getElementById('locCountry').textContent = geo.country;
+  if (geo.city) document.getElementById('locCity').textContent = geo.city;
+  if (geo.isp) document.getElementById('locISP').textContent = geo.isp;
+  if (geo.lat && (geo.lng || geo.lon)) {
+    currentLat = geo.lat;
+    currentLng = geo.lng || geo.lon;
+    document.getElementById('locCoords').textContent = currentLat + ', ' + currentLng;
+  }
+  if (geo.timezone) document.getElementById('locTZ').textContent = geo.timezone;
+  document.getElementById('locAccuracy').textContent = geo.zip ? geo.zip + ' (Postal)' : 'Approximate';
+}
+
+function renderMap(geo) {
+  var lat = geo.lat || 9.0579;
+  var lng = (geo.lng || geo.lon) || 7.4951;
+  document.getElementById('mapFrame').src = 'https://www.openstreetmap.org/export/embed.html?layer=mapnik&marker=' + lat + ',' + lng + '&zoom=12';
+}
+
+function renderDeviceInfo(geo) {
+  if (!geo.org && !geo.hostname && !geo.as && !geo.isp) return;
+  document.getElementById('deviceInfo').style.display = 'grid';
+  document.getElementById('devType').textContent = geo.device_type || 'Unknown';
+  document.getElementById('devOS').textContent = geo.os || 'Unknown';
+  document.getElementById('devBrowser').textContent = geo.browser || 'Unknown';
+  document.getElementById('devOrg').textContent = geo.org || geo.isp || 'Unknown';
+  document.getElementById('devHostname').textContent = geo.hostname || 'N/A';
+  document.getElementById('devAS').textContent = geo.as || 'N/A';
+}
+
+function renderThreatAlert(score, reports) {
+  var container = document.getElementById('threatAlert');
+  if (score <= 10 && (!reports || reports.length === 0)) {
+    container.style.display = 'none';
+    return;
+  }
+  container.style.display = 'flex';
+  var level = score > 50 ? 'HIGH' : score > 10 ? 'MEDIUM' : 'LOW';
+  var color = score > 50 ? '#f85149' : score > 10 ? '#d29922' : '#3fb950';
+  container.innerHTML =
+    '<span class="alert-icon">' + (score > 50 ? '🔴' : score > 10 ? '🟡' : '🟢') + '</span>' +
+    '<div>' +
+    '<div class="alert-text">' + level + ' THREAT LEVEL - Abuse Confidence Score: ' + score + '%</div>' +
+    '<div class="alert-detail">' + (reports && reports.length > 0 ? reports.length + ' abuse report(s) found' : 'No direct abuse reports') + '</div>' +
+    '</div>';
+  container.style.borderColor = color;
+  container.style.background = color + '10';
+}
+
+function renderResults(containerId, apis) {
+  var container = document.getElementById(containerId);
+  container.innerHTML = '';
+  if (!apis || !apis.length) {
+    container.innerHTML = '<div style="color:#484f58;padding:20px;text-align:center">No data available</div>';
+    return;
+  }
+  for (var i = 0; i < apis.length; i++) {
+    var api = apis[i];
+    var card = document.createElement('div');
+    card.className = 'api-card' + (api.result.success ? '' : ' threat');
+    var header = document.createElement('div');
+    header.className = 'api-card-header';
+    header.onclick = function() {
+      this.nextElementSibling.classList.toggle('active');
+    };
+    var badge = document.createElement('span');
+    badge.className = 'badge ' + (api.result.success ? 'found' : 'not-found');
+    badge.textContent = api.result.success ? 'DATA' : 'NONE';
+    header.innerHTML = '<h3>' + api.name + '</h3>';
+    header.appendChild(badge);
+    var status = document.createElement('div');
+    status.className = 'api-status ' + (api.result.success ? 'success' : 'error');
+    header.appendChild(status);
+    card.appendChild(header);
+    var body = document.createElement('div');
+    body.className = 'api-card-body';
+    var dataDiv = document.createElement('div');
+    dataDiv.className = 'api-data highlight';
+    if (api.result.success && api.result.data) {
+      var data = api.result.data;
+      if (data.lat || data.latitude) {
+        dataDiv.innerHTML =
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
+          '<div><strong>Country:</strong> ' + (data.country||data.country_name||'N/A') + '</div>' +
+          '<div><strong>City:</strong> ' + (data.city||'N/A') + '</div>' +
+          '<div><strong>ISP:</strong> ' + (data.isp||data.org||'N/A') + '</div>' +
+          '<div><strong>Coordinates:</strong> ' + (data.lat||data.latitude||'?') + ', ' + (data.lon||data.longitude||data.lng||'?') + '</div>' +
+          '<div><strong>Timezone:</strong> ' + (data.timezone||data.time_zone||'N/A') + '</div>' +
+          '<div><strong>Hostname:</strong> ' + (data.hostname||data.host||'N/A') + '</div>' +
+          '</div>';
+      } else if (data.abuseConfidenceScore !== undefined) {
+        var score = data.abuseConfidenceScore;
+        dataDiv.innerHTML =
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
+          '<div><strong>Abuse Score:</strong> <span style="color:' + (score>50?'#f85149':score>10?'#d29922':'#3fb950') + '">' + score + '%</span></div>' +
+          '<div><strong>Total Reports:</strong> ' + (data.totalReports||0) + '</div>' +
+          '<div><strong>Last Reported:</strong> ' + (data.lastReportedAt||'N/A') + '</div>' +
+          '<div><strong>ISP:</strong> ' + (data.isp||'N/A') + '</div>' +
+          '<div><strong>Domain:</strong> ' + (data.domain||'N/A') + '</div>' +
+          '<div><strong>Usage Type:</strong> ' + (data.usageType||'N/A') + '</div>' +
+          '</div>';
+      } else if (data.ports) {
+        dataDiv.innerHTML =
+          '<div><strong>Open Ports:</strong> ' + ((data.ports||[]).join(', ')||'None') + '</div>' +
+          '<div style="margin-top:8px"><strong>Services:</strong> ' + JSON.stringify(data.services||data.data||'N/A').substring(0,200) + '</div>';
+      } else {
+        dataDiv.textContent = JSON.stringify(data, null, 2).substring(0, 500);
+      }
+    } else {
+      dataDiv.style.color = '#f85149';
+      dataDiv.textContent = 'No data: ' + (api.result.error || 'Request failed');
+    }
+    body.appendChild(dataDiv);
+    card.appendChild(body);
+    container.appendChild(card);
+  }
+}
+
+function generateSummary() {
+  if (!currentQuery || Object.keys(allResults).length === 0) return;
+  var summary = document.getElementById('summaryContent');
+  var found = 0;
+  var vals = Object.values(allResults);
+  for (var i = 0; i < vals.length; i++) {
+    if (vals[i].success) found++;
+  }
+  var riskLevel, riskColor;
+  if (threatScore > 50) {
+    riskLevel = t('risk_high');
+    riskColor = '#f85149';
+  } else if (threatScore > 10) {
+    riskLevel = t('risk_medium');
+    riskColor = '#d29922';
+  } else {
+    riskLevel = t('risk_low');
+    riskColor = '#3fb950';
+  }
+  var totalKeys = Object.keys(allResults).length;
+  summary.innerHTML =
+    '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">' +
+    '<div style="padding:8px 20px;border-radius:20px;background:' + riskColor + '20;border:1px solid ' + riskColor + ';color:' + riskColor + ';font-weight:600;font-size:14px">' + riskLevel + '</div>' +
+    '<div style="font-size:12px;color:#8b949e">Device Risk Assessment</div>' +
+    '</div>' +
+    '<div style="margin-bottom:12px"><strong>Query:</strong> ' + currentQuery + ' (' + currentMethod.toUpperCase() + ')</div>' +
+    '<div style="margin-bottom:8px"><strong>Location:</strong> ' + (consolidatedGeo.city||'?') + ', ' + (consolidatedGeo.country||'?') + ' ' + (consolidatedGeo.lat ? '✅ Trackable' : '❌ Not Trackable') + '</div>' +
+    '<div style="margin-bottom:8px"><strong>ISP/Org:</strong> ' + (consolidatedGeo.isp||consolidatedGeo.org||'Unknown') + '</div>' +
+    '<div style="margin-bottom:8px"><strong>Threat Score:</strong> ' + threatScore + '%</div>' +
+    '<div style="margin-bottom:8px"><strong>Open Ports:</strong> ' + ports + '</div>' +
+    '<div style="margin-top:12px;padding-top:12px;border-top:1px solid #30363d;font-size:12px;color:#484f58">APIs Queried: ' + totalKeys + ' • Successful: ' + found + ' • Failed: ' + (totalKeys - found) + '</div>';
+}
+
+function generatePDF() {
+  if (!currentQuery || Object.keys(allResults).length === 0) { alert('No data to export.'); return; }
+  var report = 'DSS IP & DEVICE INTELLIGENCE REPORT\n====================================\nQuery: ' + currentQuery + '\nType: ' + currentMethod.toUpperCase() + '\nDate: ' + new Date().toISOString() + '\n\n--- LOCATION ---\n';
+  report += 'Country: ' + (consolidatedGeo.country||'N/A') + '\nCity: ' + (consolidatedGeo.city||'N/A') + '\nISP: ' + (consolidatedGeo.isp||'N/A') + '\nCoordinates: ' + (currentLat||'?') + ', ' + (currentLng||'?') + '\n\n--- RESULTS ---\n\n';
+  var entries = Object.entries(allResults);
+  for (var i = 0; i < entries.length; i++) {
+    var name = entries[i][0];
+    var result = entries[i][1];
+    report += name + ': ' + (result.success ? 'DATA' : 'NONE') + '\n';
+    if (result.success) report += JSON.stringify(result.data, null, 2).substring(0, 300) + '\n';
+    report += '\n---\n\n';
+  }
+  var blob = new Blob([report], {type: 'text/plain'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'DSS_IP_Report_' + currentQuery + '_' + Date.now() + '.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function downloadJSON() {
+  if (!currentQuery || Object.keys(allResults).length === 0) { alert('No data to export.'); return; }
+  var exportData = {
+    report: {
+      query: currentQuery,
+      type: currentMethod,
+      timestamp: new Date().toISOString(),
+      location: {lat: currentLat, lng: currentLng, city: consolidatedGeo.city, country: consolidatedGeo.country, isp: consolidatedGeo.isp},
+      threat_score: threatScore,
+      open_ports: ports
+    },
+    results: allResults
+  };
+  var blob = new Blob([JSON.stringify(exportData, null, 2)], {type: 'application/json'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'DSS_IP_Data_' + currentQuery + '_' + Date.now() + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function clearResults() {
+  allResults = {};
+  currentQuery = '';
+  currentLat = null;
+  currentLng = null;
+  threatScore = 0;
+  ports = 0;
+  consolidatedGeo = {};
+  document.getElementById('resultsContainer').classList.remove('active');
+  document.getElementById('statsGrid').style.display = 'none';
+  document.getElementById('threatAlert').style.display = 'none';
+  document.getElementById('deviceInfo').style.display = 'none';
+  document.getElementById('searchInput').value = '';
+  var grids = document.querySelectorAll('.api-grid');
+  for (var i = 0; i < grids.length; i++) {
+    grids[i].innerHTML = '';
+  }
+  document.getElementById('locCountry').textContent = '-';
+  document.getElementById('locCity').textContent = '-';
+  document.getElementById('locISP').textContent = '-';
+  document.getElementById('locCoords').textContent = '-';
+  document.getElementById('locTZ').textContent = '-';
+  document.getElementById('locAccuracy').textContent = '-';
+  document.getElementById('summaryContent').textContent = 'No data available yet. Run an investigation to generate summary.';
+}
+
+document.getElementById('searchInput').addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') startInvestigation();
+});
+</script>
+</body>
+</html>
