@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>DSS Intelligence Platform v3.0</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#0a0e17;color:#e0e6ed;min-height:100vh;overflow-x:hidden}
+.login-container{min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.login-container::before{content:'';position:absolute;width:100%;height:100%;background:radial-gradient(ellipse at 20% 50%,rgba(88,166,255,0.08) 0%,transparent 50%),radial-gradient(ellipse at 80% 50%,rgba(188,140,255,0.08) 0%,transparent 50%),radial-gradient(ellipse at 50% 100%,rgba(63,185,80,0.05) 0%,transparent 50%);pointer-events:none}
+.login-box{position:relative;z-index:1;width:420px;max-width:90vw;background:linear-gradient(135deg,rgba(22,27,34,0.95) 0%,rgba(13,17,23,0.98) 100%);border:1px solid #30363d;border-radius:16px;padding:40px 32px;backdrop-filter:blur(20px);box-shadow:0 25px 60px rgba(0,0,0,0.5),0 0 0 1px rgba(48,54,61,0.5)}
+.login-header{text-align:center;margin-bottom:32px}
+.login-logo{width:56px;height:56px;background:linear-gradient(135deg,#58a6ff,#1f6feb);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;color:#fff;font-weight:800;margin:0 auto 16px;box-shadow:0 8px 24px rgba(31,111,235,0.3)}
+.login-title{font-size:22px;font-weight:700;color:#c9d1d9;margin-bottom:4px}
+.login-subtitle{font-size:13px;color:#484f58;font-weight:400}
+.login-divider{height:1px;background:linear-gradient(90deg,transparent,#30363d,transparent);margin:24px 0}
+.input-group{position:relative;margin-bottom:16px}
+.input-group .input-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px;color:#484f58;pointer-events:none;z-index:1}
+.input-group input{width:100%;padding:14px 16px 14px 44px;background:#0d1117;border:2px solid #30363d;border-radius:10px;color:#c9d1d9;font-size:14px;font-family:'Inter',sans-serif;transition:all 0.3s;outline:none}
+.input-group input:focus{border-color:#58a6ff;box-shadow:0 0 0 3px rgba(88,166,255,0.12)}
+.input-group input::placeholder{color:#484f58}
+.input-group .input-label{font-size:12px;color:#8b949e;margin-bottom:6px;font-weight:500;display:block}
+.login-btn{width:100%;padding:14px;background:linear-gradient(135deg,#1f6feb,#58a6ff);border:none;border-radius:10px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.3s;margin-top:8px;font-family:'Inter',sans-serif}
+.login-btn:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(31,111,235,0.35)}
+.login-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+.login-btn.loading{position:relative;color:transparent}
+.login-btn.loading::after{content:'';position:absolute;width:20px;height:20px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.6s linear infinite;top:50%;left:50%;margin:-10px 0 0 -10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.login-error{background:rgba(248,81,73,0.1);border:1px solid rgba(248,81,73,0.3);border-radius:8px;padding:12px 16px;color:#f85149;font-size:13px;margin-bottom:16px;display:none;align-items:center;gap:10px}
+.login-error.show{display:flex}
+.login-error .err-icon{font-size:18px}
+.login-footer{text-align:center;margin-top:24px;font-size:11px;color:#30363d}
+.login-footer span{color:#484f58}
+.dashboard{display:none;min-height:100vh}
+.dashboard.active{display:block}
+.topbar{background:rgba(22,27,34,0.95);backdrop-filter:blur(20px);border-bottom:1px solid #30363d;padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.topbar-left{display:flex;align-items:center;gap:16px}
+.topbar-logo{display:flex;align-items:center;gap:10px}
+.topbar-logo .logo-small{width:32px;height:32px;background:linear-gradient(135deg,#58a6ff,#1f6feb);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;font-weight:700}
+.topbar-logo .logo-name{font-size:16px;font-weight:600;color:#c9d1d9}
+.topbar-logo .logo-version{font-size:10px;color:#484f58;background:#21262d;padding:2px 8px;border-radius:4px;margin-left:8px}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.topbar-user{font-size:13px;color:#8b949e}
+.topbar-user strong{color:#c9d1d9}
+.topbar-logout{padding:8px 16px;border-radius:6px;border:1px solid #30363d;background:transparent;color:#8b949e;font-size:12px;cursor:pointer;transition:all 0.2s;font-family:'Inter',sans-serif}
+.topbar-logout:hover{background:#21262d;color:#f85149;border-color:#f85149}
+.hero{background:linear-gradient(135deg,rgba(31,111,235,0.1) 0%,rgba(188,140,255,0.05) 100%);border-bottom:1px solid #30363d;padding:40px 24px;text-align:center}
+.hero-title{font-size:28px;font-weight:700;color:#c9d1d9;margin-bottom:8px}
+.hero-title span{background:linear-gradient(135deg,#58a6ff,#bc8cff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero-sub{font-size:14px;color:#484f58;max-width:600px;margin:0 auto}
+.content{padding:24px;max-width:1400px;margin:0 auto}
+.welcome-banner{background:linear-gradient(135deg,#161b22,#1c2128);border:1px solid #30363d;border-radius:12px;padding:20px 24px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.welcome-text h2{font-size:18px;font-weight:600;color:#c9d1d9}
+.welcome-text p{font-size:13px;color:#484f58;margin-top:4px}
+.welcome-badge{background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.3);border-radius:20px;padding:8px 16px;color:#3fb950;font-size:12px;font-weight:500}
+.menu-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:8px}
+.menu-card{background:linear-gradient(135deg,#161b22 0%,#1c2128 100%);border:1px solid #30363d;border-radius:12px;padding:24px;cursor:pointer;transition:all 0.3s;position:relative;overflow:hidden}
+.menu-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;transform:scaleX(0);transform-origin:left;transition:transform 0.3s}
+.menu-card:hover{transform:translateY(-2px);border-color:var(--card-color,#58a6ff);box-shadow:0 8px 30px rgba(0,0,0,0.3)}
+.menu-card:hover::before{transform:scaleX(1)}
+.menu-card .card-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:16px}
+.menu-card .card-name{font-size:16px;font-weight:600;color:#c9d1d9;margin-bottom:6px}
+.menu-card .card-desc{font-size:12px;color:#484f58;line-height:1.6}
+.menu-card .card-shortcut{font-size:10px;color:#30363d;font-family:monospace;margin-top:12px;padding:4px 8px;background:#0d1117;border-radius:4px;display:inline-block}
+.menu-card.ph .card-icon{background:rgba(88,166,255,0.15);color:#58a6ff}.menu-card.ph::before{background:#58a6ff}
+.menu-card.se .card-icon{background:rgba(240,136,62,0.15);color:#f0883e}.menu-card.se::before{background:#f0883e}
+.menu-card.nbn .card-icon{background:rgba(63,185,80,0.15);color:#3fb950}.menu-card.nbn::before{background:#3fb950}
+.menu-card.bc .card-icon{background:rgba(88,166,255,0.15);color:#58a6ff}.menu-card.bc::before{background:#58a6ff}
+.menu-card.ip .card-icon{background:rgba(248,81,73,0.15);color:#f85149}.menu-card.ip::before{background:#f85149}
+.menu-card.face .card-icon{background:rgba(188,140,255,0.15);color:#bc8cff}.menu-card.face::before{background:#bc8cff}
+.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-overlay.active{display:flex}
+.modal-box{background:#161b22;border:1px solid #30363d;border-radius:16px;width:500px;max-width:90vw;padding:32px;box-shadow:0 25px 60px rgba(0,0,0,0.5)}
+.modal-box .modal-icon{font-size:48px;text-align:center;margin-bottom:16px}
+.modal-box h2{font-size:20px;font-weight:600;color:#c9d1d9;text-align:center;margin-bottom:8px}
+.modal-box p{font-size:13px;color:#484f58;text-align:center;margin-bottom:24px}
+.modal-box .modal-btn{width:100%;padding:14px;background:linear-gradient(135deg,#1f6feb,#58a6ff);border:none;border-radius:10px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.3s;font-family:'Inter',sans-serif}
+.modal-box .modal-btn:hover{box-shadow:0 8px 20px rgba(31,111,235,0.35)}
+.modal-box .modal-btn.secondary{background:#21262d;color:#8b949e;margin-top:8px}
+.modal-box .modal-btn.secondary:hover{background:#30363d}
+.status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px}
+.status-dot.online{background:#3fb950;box-shadow:0 0 6px rgba(63,185,80,0.4)}
+.status-dot.offline{background:#484f58}
+@media(max-width:768px){.login-box{padding:32px 24px}.hero{padding:24px 16px}.hero-title{font-size:22px}.content{padding:16px}.menu-grid{grid-template-columns:1fr}.topbar{padding:0 16px}.welcome-banner{flex-direction:column;text-align:center}}
+</style>
+</head>
+<body>
+
+<div class="login-container" id="loginContainer">
+<div class="login-box">
+<div class="login-header">
+<div class="login-logo">D</div>
+<div class="login-title">DSS Intelligence Platform</div>
+<div class="login-subtitle">Authorized Personnel Only</div>
+</div>
+<div class="login-divider"></div>
+<div class="login-error" id="loginError">
+<span class="err-icon">⚠️</span>
+<span id="errorText">Invalid credentials. Please try again.</span>
+</div>
+<form id="loginForm" onsubmit="handleLogin(event)">
+<div class="input-group">
+<label class="input-label">Email Address</label>
+<span class="input-icon">✉</span>
+<input type="email" id="emailInput" placeholder="Enter your email" value="harunalawali5522@gmail.com" required autocomplete="email">
+</div>
+<div class="input-group">
+<label class="input-label">Password</label>
+<span class="input-icon">🔒</span>
+<input type="password" id="passwordInput" placeholder="Enter your password" required autocomplete="current-password">
+</div>
+<button type="submit" class="login-btn" id="loginBtn">Access Dashboard</button>
+</form>
+<div class="login-footer">
+<span>Secure Connection • AES-256 Encrypted</span>
+</div>
+</div>
+</div>
+
+<div class="dashboard" id="dashboard">
+<div class="topbar">
+<div class="topbar-left">
+<div class="topbar-logo">
+<div class="logo-small">D</div>
+<div class="logo-name">DSS Intelligence</div>
+<div class="logo-version">v3.0</div>
+</div>
+</div>
+<div class="topbar-right">
+<div class="topbar-user">Welcome, <strong id="displayEmail">harunalawali5522</strong></div>
+<button class="topbar-logout" onclick="handleLogout()">✕ Logout</button>
+</div>
+</div>
+
+<div class="hero">
+<div class="hero-title">🔍 <span>National Security Intelligence</span> Platform</div>
+<div class="hero-sub">Authorized DSS operatives only • All activities are monitored and logged</div>
+</div>
+
+<div class="content">
+<div class="welcome-banner">
+<div class="welcome-text">
+<h2>Good to see you, Officer</h2>
+<p>Select an intelligence module below to begin your investigation</p>
+</div>
+<div class="welcome-badge"><span class="status-dot online"></span>System Active • Secure Connection</div>
+</div>
+
+<div class="menu-grid">
+<div class="menu-card ph" onclick="launchModule('ph')">
+<div class="card-icon">📱</div>
+<div class="card-name">Phone Number Intelligence</div>
+<div class="card-desc">Comprehensive phone number investigation — location tracking, call logs, SMS, WhatsApp, Telegram, social media footprint, carrier lookup, and SS7 signal intelligence. Enter a phone number to track the target across networks and platforms.</div>
+<div class="card-shortcut">ph.html → Phone Intel</div>
+</div>
+
+<div class="menu-card se" onclick="launchModule('se')">
+<div class="card-icon">📧</div>
+<div class="card-name">Email & Password Intelligence</div>
+<div class="card-desc">Deep email investigation — breach analysis, password leaks, social profile discovery, data breach history, credential exposure check, and identity verification across 20+ databases and intelligence feeds.</div>
+<div class="card-shortcut">se.html → Email Intel</div>
+</div>
+
+<div class="menu-card nbn" onclick="launchModule('nbn')">
+<div class="card-icon">🆔</div>
+<div class="card-name">National Identity Intelligence</div>
+<div class="card-desc">Nigerian identity verification — BVN, NIN, International Passport, Voter Card, and Driver's License lookup. Retrieve full profile including photographs, fingerprints, addresses, and linked bank accounts from national databases.</div>
+<div class="card-shortcut">nbn.html → Identity Intel</div>
+</div>
+
+<div class="menu-card bc" onclick="launchModule('bc')">
+<div class="card-icon">🏦</div>
+<div class="card-name">Bank Account Intelligence</div>
+<div class="card-desc">Financial investigation — balance inquiry, transaction history, account name verification, BVN-linked account discovery, and multi-bank relationship mapping across all Nigerian banks including Zenith, GTBank, Access, UBA, FirstBank and more.</div>
+<div class="card-shortcut">bc.html → Bank Intel</div>
+</div>
+
+<div class="menu-card ip" onclick="launchModule('ip')">
+<div class="card-icon">🌐</div>
+<div class="card-name">IP & Device Intelligence</div>
+<div class="card-desc">Device tracking and forensic analysis — IP geolocation, threat intelligence scoring, open port scanning, reverse DNS, WHOIS lookup, device fingerprinting, and malware/abuse database checking for suspect devices.</div>
+<div class="card-shortcut">ip.html → IP Intel</div>
+</div>
+
+<div class="menu-card face" onclick="launchModule('face')">
+<div class="card-icon">👤</div>
+<div class="card-name">Face Recognition & Image Intel</div>
+<div class="card-desc">Advanced facial recognition — upload a suspect photo to search across PimEyes, FaceCheck, Google, Yandex, Bing, and TinEye. Extract EXIF metadata, detect manipulation, and find all social media profiles using the face.</div>
+<div class="card-shortcut">face.html → Face Intel</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="modal-overlay" id="launchModal">
+<div class="modal-box">
+<div class="modal-icon" id="modalIcon">📱</div>
+<h2 id="modalTitle">Launching Module</h2>
+<p id="modalDesc">You are about to open the intelligence module in a new secure tab. All actions are logged.</p>
+<button class="modal-btn" id="modalConfirm" onclick="confirmLaunch()">✓ Confirm & Launch</button>
+<button class="modal-btn secondary" onclick="closeModal()">✕ Cancel</button>
+</div>
+</div>
+
+<script>
+const VALID_EMAIL = 'harunalawali5522@gmail.com';
+const VALID_PASSWORD = '@dss';
+const MODULE_MAP = {
+ph:{name:'Phone Number Intelligence',icon:'📱',file:'ph.html',desc:'Launch phone number investigation module for tracking, call logs, SMS, and SS7 intelligence.'},
+se:{name:'Email & Password Intelligence',icon:'📧',file:'se.html',desc:'Launch email intelligence module for breach analysis, password leaks, and social discovery.'},
+nbn:{name:'National Identity Intelligence',icon:'🆔',file:'nbn.html',desc:'Launch identity verification module for BVN, NIN, Passport, Voter Card, and License lookup.'},
+bc:{name:'Bank Account Intelligence',icon:'🏦',file:'bc.html',desc:'Launch bank account module for balance inquiry, transactions, and account verification.'},
+ip:{name:'IP & Device Intelligence',icon:'🌐',file:'ip.html',desc:'Launch IP and device tracking module for geolocation, threat scoring, and forensic analysis.'},
+face:{name:'Face Recognition & Image Intel',icon:'👤',file:'face.html',desc:'Launch facial recognition module for reverse image search, EXIF extraction, and identity matching.'}
+};
+
+let pendingModule = null;
+
+function handleLogin(e){
+e.preventDefault();
+const email = document.getElementById('emailInput').value.trim();
+const password = document.getElementById('passwordInput').value;
+const errorBox = document.getElementById('loginError');
+const errorText = document.getElementById('errorText');
+const loginBtn = document.getElementById('loginBtn');
+
+if(email !== VALID_EMAIL){
+errorBox.classList.add('show');
+errorText.textContent = 'Email address not recognized. Unauthorized access attempt logged.';
+return;
+}
+
+if(password !== VALID_PASSWORD){
+errorBox.classList.add('show');
+errorText.textContent = 'Invalid password. Access denied. This attempt has been recorded.';
+return;
+}
+
+errorBox.classList.remove('show');
+loginBtn.classList.add('loading');
+loginBtn.textContent = '';
+
+setTimeout(() => {
+document.getElementById('loginContainer').style.display = 'none';
+document.getElementById('dashboard').classList.add('active');
+document.getElementById('displayEmail').textContent = email.split('@')[0];
+loginBtn.classList.remove('loading');
+loginBtn.textContent = 'Access Dashboard';
+}, 800);
+}
+
+function handleLogout(){
+if(confirm('Are you sure you want to logout? All sessions will be terminated.')){
+document.getElementById('dashboard').classList.remove('active');
+document.getElementById('loginContainer').style.display = 'flex';
+document.getElementById('passwordInput').value = '';
+}
+}
+
+function launchModule(moduleKey){
+const module = MODULE_MAP[moduleKey];
+if(!module) return;
+pendingModule = moduleKey;
+document.getElementById('modalIcon').textContent = module.icon;
+document.getElementById('modalTitle').textContent = module.name;
+document.getElementById('modalDesc').textContent = module.desc;
+document.getElementById('launchModal').classList.add('active');
+}
+
+function confirmLaunch(){
+if(!pendingModule) return;
+const module = MODULE_MAP[pendingModule];
+if(module){
+window.open(module.file, '_blank');
+}
+closeModal();
+}
+
+function closeModal(){
+document.getElementById('launchModal').classList.remove('active');
+pendingModule = null;
+}
+
+document.getElementById('passwordInput').addEventListener('keydown', function(e){
+if(e.key === 'Enter') document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+});
+
+document.addEventListener('keydown', function(e){
+if(e.key === 'Escape') closeModal();
+});
+
+if(document.getElementById('emailInput').value === ''){
+document.getElementById('emailInput').value = VALID_EMAIL;
+}
+</script>
+</body>
+</html>
