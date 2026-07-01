@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DSS Intelligence System v2.0</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#0a0e17;color:#e0e6ed;min-height:100vh}
+.container{max-width:1400px;margin:0 auto;padding:20px}
+.header{background:linear-gradient(135deg,#0d1117 0%,#161b22 100%);border-bottom:1px solid #30363d;padding:15px 0;position:sticky;top:0;z-index:100}
+.header-content{display:flex;align-items:center;justify-content:space-between;max-width:1400px;margin:0 auto;padding:0 20px}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-icon{width:40px;height:40px;background:linear-gradient(135deg,#58a6ff,#1f6feb);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;font-weight:bold}
+.logo-text{font-size:20px;font-weight:600;background:linear-gradient(135deg,#58a6ff,#79c0ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header-badge{background:#21262d;border:1px solid #30363d;border-radius:6px;padding:6px 12px;font-size:12px;color:#8b949e}
+.search-section{background:linear-gradient(135deg,#161b22 0%,#1c2128 100%);border:1px solid #30363d;border-radius:12px;padding:30px;margin:20px 0}
+.search-title{font-size:18px;font-weight:600;margin-bottom:20px;color:#c9d1d9}
+.search-box{display:flex;gap:12px;flex-wrap:wrap}
+.search-input{flex:1;min-width:280px;padding:14px 18px;background:#0d1117;border:2px solid #30363d;border-radius:8px;color:#e0e6ed;font-size:16px;transition:all 0.3s}
+.search-input:focus{border-color:#58a6ff;outline:none;box-shadow:0 0 0 3px rgba(88,166,255,0.15)}
+.search-btn{padding:14px 32px;background:linear-gradient(135deg,#238636,#2ea043);border:none;border-radius:8px;color:#fff;font-size:16px;font-weight:600;cursor:pointer;transition:all 0.3s}
+.search-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(46,160,67,0.3)}
+.search-btn:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+.password-hint{font-size:11px;color:#484f58;margin-top:8px;font-family:monospace}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:20px 0}
+.stat-card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px}
+.stat-label{font-size:12px;color:#8b949e;text-transform:uppercase;letter-spacing:0.5px}
+.stat-value{font-size:24px;font-weight:700;color:#c9d1d9;margin-top:4px}
+.stat-value.active{color:#3fb950}
+.stat-value.error{color:#f85149}
+.results-container{display:none}
+.results-container.active{display:block}
+.results-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.results-title{font-size:18px;font-weight:600;color:#c9d1d9}
+.results-actions{display:flex;gap:8px}
+.action-btn{padding:8px 16px;border-radius:6px;border:1px solid #30363d;background:#21262d;color:#c9d1d9;font-size:13px;cursor:pointer;transition:all 0.2s}
+.action-btn:hover{background:#30363d}
+.action-btn.primary{background:#1f6feb;border-color:#1f6feb;color:#fff}
+.action-btn.primary:hover{background:#388bfd}
+.action-btn.danger{background:#da3633;border-color:#da3633;color:#fff}
+.action-btn.danger:hover{background:#f85149}
+.api-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px;margin-bottom:20px}
+.api-card{background:#161b22;border:1px solid #30363d;border-radius:8px;overflow:hidden;transition:all 0.3s}
+.api-card:hover{border-color:#58a6ff}
+.api-card-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #30363d;cursor:pointer}
+.api-card-header h3{font-size:14px;font-weight:600;color:#c9d1d9}
+.api-status{width:8px;height:8px;border-radius:50%}
+.api-status.success{background:#3fb950;box-shadow:0 0 6px rgba(63,185,80,0.4)}
+.api-status.error{background:#f85149;box-shadow:0 0 6px rgba(248,81,73,0.4)}
+.api-status.loading{background:#d29922;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.api-card-body{padding:16px;display:none}
+.api-card-body.active{display:block}
+.api-data{padding:12px;background:#0d1117;border-radius:6px;font-family:monospace;font-size:12px;line-height:1.6;color:#8b949e;white-space:pre-wrap;word-break:break-word;max-height:200px;overflow-y:auto}
+.api-data.highlight{color:#c9d1d9}
+.map-container{height:400px;border-radius:8px;overflow:hidden;border:1px solid #30363d;margin:16px 0;display:none}
+.map-container.active{display:block}
+#map{width:100%;height:100%}
+.summary-section{background:linear-gradient(135deg,#161b22,#1c2128);border:1px solid #30363d;border-radius:12px;padding:24px;margin:20px 0}
+.summary-title{font-size:18px;font-weight:600;margin-bottom:16px;color:#c9d1d9}
+.summary-content{font-size:14px;line-height:1.8;color:#8b949e}
+.summary-content strong{color:#c9d1d9}
+.language-selector{display:flex;gap:8px;margin:16px 0}
+.lang-btn{padding:6px 14px;border-radius:4px;border:1px solid #30363d;background:transparent;color:#8b949e;font-size:12px;cursor:pointer;transition:all 0.2s}
+.lang-btn:hover{border-color:#58a6ff;color:#58a6ff}
+.lang-btn.active{background:#1f6feb;border-color:#1f6feb;color:#fff}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center}
+.modal.active{display:flex}
+.modal-content{background:#161b22;border:1px solid #30363d;border-radius:12px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;padding:24px}
+.modal-title{font-size:18px;font-weight:600;margin-bottom:16px;color:#c9d1d9}
+.loading-spinner{display:flex;align-items:center;justify-content:center;padding:40px}
+.spinner{width:40px;height:40px;border:3px solid #30363d;border-top-color:#58a6ff;border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.error-message{padding:16px;background:rgba(248,81,73,0.1);border:1px solid rgba(248,81,73,0.3);border-radius:8px;color:#f85149;font-size:14px}
+.success-message{padding:16px;background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.3);border-radius:8px;color:#3fb950;font-size:14px}
+@media(max-width:768px){.search-box{flex-direction:column}.search-input{min-width:auto}.api-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="header">
+<div class="header-content">
+<div class="logo">
+<div class="logo-icon">D</div>
+<div class="logo-text">DSS Intelligence v2.0</div>
+</div>
+<div class="header-badge">SECURE • AUTHORIZED ACCESS ONLY</div>
+</div>
+</div>
+
+<div class="container">
+
+<div class="search-section">
+<div class="search-title">Phone Number Intelligence Search</div>
+<div class="search-box">
+<input type="text" class="search-input" id="phoneInput" placeholder="Enter phone number (e.g., 2348012345678)" maxlength="14">
+<button class="search-btn" id="searchBtn" onclick="startInvestigation()">Begin Investigation</button>
+</div>
+<div class="password-hint">Authentication: @dss/v1 • All requests are encrypted and logged</div>
+</div>
+
+<div class="stats-grid" id="statsGrid" style="display:none">
+<div class="stat-card"><div class="stat-label">APIs Queried</div><div class="stat-value" id="totalApis">0</div></div>
+<div class="stat-card"><div class="stat-label">Successful</div><div class="stat-value active" id="successCount">0</div></div>
+<div class="stat-card"><div class="stat-label">Failed</div><div class="stat-value error" id="failCount">0</div></div>
+<div class="stat-card"><div class="stat-label">Response Time</div><div class="stat-value" id="responseTime">0ms</div></div>
+</div>
+
+<div class="results-container" id="resultsContainer">
+<div class="results-header">
+<div class="results-title">Investigation Results: <span id="targetPhone" style="color:#58a6ff"></span></div>
+<div class="results-actions">
+<button class="action-btn" onclick="generatePDF()">📄 Export PDF</button>
+<button class="action-btn" onclick="downloadJSON()">💾 Download JSON</button>
+<button class="action-btn danger" onclick="clearResults()">🗑 Clear All</button>
+</div>
+</div>
+
+<div class="language-selector" id="languageSelector">
+<button class="lang-btn active" onclick="setLanguage('hausa')">Hausa</button>
+<button class="lang-btn" onclick="setLanguage('english')">English</button>
+<button class="lang-btn" onclick="setLanguage('pidgin')">Pidgin</button>
+<button class="lang-btn" onclick="setLanguage('yoruba')">Yoruba</button>
+<button class="lang-btn" onclick="setLanguage('igbo')">Igbo</button>
+</div>
+
+<div id="apiResults" class="api-grid"></div>
+
+<div class="map-container" id="mapContainer">
+<div id="map"></div>
+</div>
+
+<div class="summary-section">
+<div class="summary-title">📋 Intelligence Summary</div>
+<div class="summary-content" id="summaryContent">No data available yet. Run an investigation to generate summary.</div>
+</div>
+</div>
+
+</div>
+
+<div class="modal" id="loadingModal">
+<div class="modal-content">
+<div class="modal-title">🔍 Investigation in Progress</div>
+<div class="loading-spinner"><div class="spinner"></div></div>
+<p style="text-align:center;color:#8b949e" id="loadingStatus">Querying APIs and Telegram bots...</p>
+</div>
+</div>
+
+<script>
+const API_PASSWORD = '@dss/v1';
+const WORKER_URL = 'https://security.pages.dev/api/ph.js';
+let currentPhone = '';
+let allResults = {};
+let language = 'hausa';
+
+const translations = {
+  hausa: {
+    searching: 'Ana bincike...',
+    success: 'Nasara',
+    fail: 'Kasa',
+    location: 'Wuri',
+    calls: 'Kira',
+    sms: 'Sakonni',
+    social: 'Social Media',
+    ss7: 'SS7 Signal',
+    not_found: 'Babu bayanai',
+    error: 'Kuskure',
+    summary_header: 'Takaitaccen Bayani',
+    risk_assessment: 'Kimanin Hadari',
+    risk_high: 'Babban Hadari',
+    risk_medium: 'Matsakaicin Hadari',
+    risk_low: 'Kananan Hadari',
+    no_sim: 'Babu SIM Card',
+    active: 'Aiki',
+    inactive: 'Baya Aiki',
+    unknown: 'Ba a sani ba'
+  },
+  english: {
+    searching: 'Searching...',
+    success: 'Success',
+    fail: 'Failed',
+    location: 'Location',
+    calls: 'Calls',
+    sms: 'Messages',
+    social: 'Social Media',
+    ss7: 'SS7 Signal',
+    not_found: 'No data',
+    error: 'Error',
+    summary_header: 'Summary Report',
+    risk_assessment: 'Risk Assessment',
+    risk_high: 'High Risk',
+    risk_medium: 'Medium Risk',
+    risk_low: 'Low Risk',
+    no_sim: 'No SIM Card',
+    active: 'Active',
+    inactive: 'Inactive',
+    unknown: 'Unknown'
+  },
+  pidgin: {
+    searching: 'De search...',
+    success: 'Success',
+    fail: 'Fail',
+    location: 'Where e dey',
+    calls: 'Calls wey e make',
+    sms: 'Messages',
+    social: 'Social Media',
+    ss7: 'SS7 Signal',
+    not_found: 'No info',
+    error: 'Error',
+    summary_header: 'Wetin we find',
+    risk_assessment: 'Level of wahala',
+    risk_high: 'Wahala dey o',
+    risk_medium: 'Wahala small',
+    risk_low: 'No wahala',
+    no_sim: 'No SIM Card',
+    active: 'De work',
+    inactive: 'No de work',
+    unknown: 'No know'
+  },
+  yoruba: {
+    searching: 'Sise iwadi...',
+    success: 'Aseyori',
+    fail: 'Ikuna',
+    location: 'Ipo',
+    calls: 'Awon ipe',
+    sms: 'Awon ifiranse',
+    social: 'Ajangbon',
+    ss7: 'SS7 Ifihan',
+    not_found: 'Ko si data',
+    error: 'Asise',
+    summary_header: 'Akopo Iwadi',
+    risk_assessment: 'Iwon ewu',
+    risk_high: 'Ewu nla',
+    risk_medium: 'Ewu alabode',
+    risk_low: 'Ewu kekere',
+    no_sim: 'Ko si SIM',
+    active: 'Ti n sise',
+    inactive: 'Ko sise',
+    unknown: 'Ai damo'
+  },
+  igbo: {
+    searching: 'Na-eme nchoputa...',
+    success: 'Oganihu',
+    fail: 'Odida',
+    location: 'Ebe',
+    calls: 'Okwu',
+    sms: 'Ozi',
+    social: 'Mgbasa ozi',
+    ss7: 'SS7 Ngosiputa',
+    not_found: 'Enweghi data',
+    error: 'Njehie',
+    summary_header: 'Nchikota Nchoputa',
+    risk_assessment: 'Ntule ihe egwu',
+    risk_high: 'Nsogbu di ukwuu',
+    risk_medium: 'Nsogbu di n\'etiti',
+    risk_low: 'Nsogbu di ntakiri',
+    no_sim: 'Enweghi SIM Kaadi',
+    active: 'Na-aru oru',
+    inactive: 'Anaghi aru oru',
+    unknown: 'Amaghi'
+  }
+};
+
+function t(key) {
+  return translations[language] && translations[language][key] !== undefined ? translations[language][key] : key;
+}
+
+function setLanguage(lang) {
+  language = lang;
+  document.querySelectorAll('.lang-btn').forEach(function(b) { b.classList.remove('active'); });
+  var btn = document.querySelector('.lang-btn[onclick="setLanguage(\'' + lang + '\')"]');
+  if (btn) btn.classList.add('active');
+  if (currentPhone) generateSummary();
+}
+
+const API_ENDPOINTS = {
+  location: [
+    {name:'MTN Location',url:'https://api.mtn.com.ng/v1/locate/{number}',method:'GET'},
+    {name:'Glo Location',url:'https://api.glo.com/location/{number}',method:'GET'},
+    {name:'Airtel Location',url:'https://api.airtel.com.ng/v2/locate/{number}',method:'GET'},
+    {name:'9mobile Location',url:'https://api.9mobile.com.ng/v1/locate/{number}',method:'GET'},
+    {name:'SS7 ATI',url:'https://ss7-gateway.com/v1/ati?msisdn={number}',method:'GET'},
+    {name:'SS7 SRI',url:'https://ss7-gateway.com/v1/sri?msisdn={number}',method:'GET'},
+    {name:'SS7 Map',url:'https://ss7-map.com/api/location?number={number}',method:'GET'},
+    {name:'HLR Lookup',url:'https://hlr-lookup.com/api?number={number}',method:'GET'},
+    {name:'Truecaller',url:'https://api.truecaller.com/v2/phone/{number}',method:'GET'},
+    {name:'Google Timeline',url:'https://www.google.com/maps/timeline?pb=!1m2!1m1!1s{number}',method:'GET'}
+  ],
+  calls: [
+    {name:'MTN Call History',url:'https://api.mtn.com.ng/v1/cdr/{number}',method:'GET'},
+    {name:'Glo Call Logs',url:'https://api.glo.com/call-logs/{number}',method:'GET'},
+    {name:'Airtel CDR',url:'https://api.airtel.com.ng/v2/cdr/{number}',method:'GET'},
+    {name:'9mobile Call Data',url:'https://api.9mobile.com.ng/v1/calls/{number}',method:'GET'},
+    {name:'GSMA One API',url:'https://api.gsma.com/oneapi/call-history/{number}',method:'GET'}
+  ],
+  sms: [
+    {name:'MTN SMS Archive',url:'https://api.mtn.com.ng/v1/sms/{number}',method:'GET'},
+    {name:'Glo SMS Logs',url:'https://api.glo.com/sms/{number}',method:'GET'},
+    {name:'Airtel SMS',url:'https://api.airtel.com.ng/v2/sms/{number}',method:'GET'},
+    {name:'SMSC Dump',url:'https://smsc-dump.com/api/{number}',method:'GET'},
+    {name:'SMS Gateway',url:'https://smsgateway.com/api/sms-log/{number}',method:'GET'}
+  ],
+  social: [
+    {name:'WhatsApp Business',url:'https://api.whatsapp.com/v1/contacts/{number}',method:'GET'},
+    {name:'Facebook Graph',url:'https://graph.facebook.com/v18.0/search?q={number}&type=user',method:'GET'},
+    {name:'Instagram Search',url:'https://www.instagram.com/web/search/topsearch/?query={number}',method:'GET'},
+    {name:'Twitter/X',url:'https://api.twitter.com/2/users/by/phone/{number}',method:'GET'},
+    {name:'LinkedIn',url:'https://www.linkedin.com/search/results/people/?keywords={number}',method:'GET'},
+    {name:'Snapchat',url:'https://app.snapchat.com/phone/{number}',method:'GET'},
+    {name:'TikTok',url:'https://www.tiktok.com/api/phone/search/{number}',method:'GET'},
+    {name:'Google Accounts',url:'https://accounts.google.com/identify?phone={number}',method:'GET'},
+    {name:'Apple ID',url:'https://setup.icloud.com/setup/ws/1/validatePhone?phone={number}',method:'GET'},
+    {name:'Telegram Search',url:'https://t.me/search?q={number}',method:'GET'},
+    {name:'Signal',url:'https://signal.org/phone/{number}',method:'GET'}
+  ],
+  ss7: [
+    {name:'FreeSS7',url:'https://freess7.com/api/v1/locate?msisdn={number}',method:'GET'},
+    {name:'SS7Map',url:'https://ss7map.com/api/location?number={number}',method:'GET'},
+    {name:'SS7Snoop',url:'https://ss7snoop.net/api/ati?msisdn={number}',method:'GET'},
+    {name:'OpenSS7',url:'https://openss7.org/api/v1/sri?msisdn={number}',method:'GET'},
+    {name:'Telegram SS7 Bot',bot:'@SS7LocateBot'},
+    {name:'Phone Tracker Pro',bot:'@PhoneTrackerProBot'},
+    {name:'Global Track',bot:'@GlobalTrackBot'},
+    {name:'IMSI SS7',bot:'@IMSI_SS7_Bot'}
+  ],
+  telegram_bots: [
+    {name:'Truecaller Lookup',bot:'@TruecallerBot'},
+    {name:'Phone Lookup',bot:'@PhoneLookupBot'},
+    {name:'Number Tracker',bot:'@NumberTrackerBot'},
+    {name:'Phone Spy',bot:'@PhoneSpyBot'},
+    {name:'SMS Grabber',bot:'@SMSGrabberBot'},
+    {name:'Call Recorder',bot:'@CallRecorderBot'},
+    {name:'WhatsApp Spy',bot:'@WhatsAppSpyBot'},
+    {name:'Telegram OSINT',bot:'@TelegramOSINTBot'},
+    {name:'Facebook Lookup',bot:'@FacebookLookupBot'},
+    {name:'Instagram Lookup',bot:'@InstagramLookupBot'},
+    {name:'Phone Search',bot:'@PhoneSearchBot'},
+    {name:'SIM Swap',bot:'@SIMSwapBot'},
+    {name:'Location Bot',bot:'@LocationBot'},
+    {name:'IMSI Catcher Bot',bot:'@IMSI_Catcher_Bot'}
+  ]
+};
+
+async function queryAPI(endpoint, number) {
+  var url = endpoint.url.replace('{number}', number);
+  var startTime = Date.now();
+  try {
+    var response = await fetch(WORKER_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        password:API_PASSWORD,
+        type:'api',
+        target:url,
+        method:endpoint.method||'GET',
+        name:endpoint.name
+      })
+    });
+    var data = await response.json();
+    return{success:true, data:data, time:Date.now()-startTime};
+  } catch(e) {
+    return{success:false, error:e.message, time:Date.now()-startTime};
+  }
+}
+
+async function queryTelegramBot(bot, number) {
+  var startTime = Date.now();
+  try {
+    var response = await fetch(WORKER_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        password:API_PASSWORD,
+        type:'telegram',
+        bot:bot.bot,
+        number:number,
+        name:bot.name
+      })
+    });
+    var data = await response.json();
+    return{success:true, data:data, time:Date.now()-startTime};
+  } catch(e) {
+    return{success:false, error:e.message, time:Date.now()-startTime};
+  }
+}
+
+async function startInvestigation() {
+  var phone = document.getElementById('phoneInput').value.replace(/\s/g,'');
+  if (!phone || phone.length < 10) {
+    alert('Please enter a valid phone number');
+    return;
+  }
+
+  currentPhone = phone;
+  document.getElementById('targetPhone').textContent = phone;
+  document.getElementById('searchBtn').disabled = true;
+  document.getElementById('searchBtn').textContent = '⏳ Investigating...';
+  document.getElementById('loadingModal').classList.add('active');
+  document.getElementById('resultsContainer').classList.remove('active');
+  document.getElementById('statsGrid').style.display = 'none';
+  allResults = {};
+
+  var total = 0, success = 0, fail = 0;
+  var totalTime = 0;
+  var resultsHtml = {};
+
+  var allApis = API_ENDPOINTS.location.concat(API_ENDPOINTS.calls).concat(API_ENDPOINTS.sms).concat(API_ENDPOINTS.social).concat(API_ENDPOINTS.ss7).concat(API_ENDPOINTS.telegram_bots);
+
+  for (var i = 0; i < allApis.length; i++) {
+    var api = allApis[i];
+    total++;
+    document.getElementById('loadingStatus').textContent = 'Querying ' + api.name + '...';
+
+    var result;
+    if (api.bot) {
+      result = await queryTelegramBot(api, phone);
+    } else {
+      result = await queryAPI(api, phone);
+    }
+
+    totalTime += result.time;
+    if (result.success) { success++; } else { fail++; }
+
+    var category = 'other';
+    if (api.bot) {
+      category = 'telegram_bots';
+    } else {
+      for (var catName in API_ENDPOINTS) {
+        if (catName === 'telegram_bots' || catName === 'ss7') continue;
+        var found = false;
+        for (var j = 0; j < API_ENDPOINTS[catName].length; j++) {
+          if (API_ENDPOINTS[catName][j].name === api.name) {
+            category = catName;
+            found = true;
+            break;
+          }
+        }
+        if (found) break;
+      }
+      if (category === 'other') {
+        for (var j = 0; j < API_ENDPOINTS.ss7.length; j++) {
+          if (API_ENDPOINTS.ss7[j].name === api.name) {
+            category = 'ss7';
+            break;
+          }
+        }
+      }
+    }
+
+    if (!resultsHtml[category]) resultsHtml[category] = [];
+    resultsHtml[category].push({name: api.name, result: result, category: category});
+
+    allResults[api.name] = result;
+
+    document.getElementById('totalApis').textContent = total;
+    document.getElementById('successCount').textContent = success;
+    document.getElementById('failCount').textContent = fail;
+    document.getElementById('responseTime').textContent = Math.round(totalTime/total) + 'ms';
+  }
+
+  document.getElementById('loadingModal').classList.remove('active');
+  document.getElementById('statsGrid').style.display = 'grid';
+  document.getElementById('resultsContainer').classList.add('active');
+  document.getElementById('searchBtn').disabled = false;
+  document.getElementById('searchBtn').textContent = 'Begin Investigation';
+
+  renderResults(resultsHtml);
+  generateSummary();
+  checkForLocation();
+}
+
+function renderResults(resultsHtml) {
+  var container = document.getElementById('apiResults');
+  container.innerHTML = '';
+
+  var categoryNames = {
+    location: 'Location & Network',
+    calls: 'Call History',
+    sms: 'SMS Messages',
+    social: 'Social Media',
+    ss7: 'SS7 Intelligence',
+    telegram_bots: 'Telegram Bots'
+  };
+
+  var categoryKeys = Object.keys(resultsHtml);
+  for (var c = 0; c < categoryKeys.length; c++) {
+    var category = categoryKeys[c];
+    var apis = resultsHtml[category];
+    var section = document.createElement('div');
+    section.style.cssText = 'grid-column:1/-1;margin-top:16px';
+
+    var title = document.createElement('h3');
+    title.style.cssText = 'font-size:16px;font-weight:600;color:#c9d1d9;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #30363d';
+    title.textContent = categoryNames[category] || category;
+    section.appendChild(title);
+
+    var grid = document.createElement('div');
+    grid.className = 'api-grid';
+    grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px';
+
+    for (var a = 0; a < apis.length; a++) {
+      var api = apis[a];
+      var card = document.createElement('div');
+      card.className = 'api-card';
+
+      var header = document.createElement('div');
+      header.className = 'api-card-header';
+      header.onclick = function() {
+        this.nextElementSibling.classList.toggle('active');
+      };
+
+      var nameSpan = document.createElement('h3');
+      nameSpan.textContent = api.name;
+      header.appendChild(nameSpan);
+
+      var status = document.createElement('div');
+      status.className = 'api-status ' + (api.result.success ? 'success' : 'error');
+      header.appendChild(status);
+
+      card.appendChild(header);
+
+      var body = document.createElement('div');
+      body.className = 'api-card-body';
+
+      var dataDiv = document.createElement('div');
+      dataDiv.className = 'api-data highlight';
+      if (api.result.success) {
+        dataDiv.textContent = JSON.stringify(api.result.data, null, 2);
+      } else {
+        dataDiv.textContent = 'Error: ' + (api.result.error || 'Request failed');
+        dataDiv.style.color = '#f85149';
+      }
+
+      var timeDiv = document.createElement('div');
+      timeDiv.style.cssText = 'font-size:11px;color:#484f58;margin-top:8px';
+      timeDiv.textContent = 'Response time: ' + api.result.time + 'ms';
+
+      body.appendChild(dataDiv);
+      body.appendChild(timeDiv);
+      card.appendChild(body);
+      grid.appendChild(card);
+    }
+
+    section.appendChild(grid);
+    container.appendChild(section);
+  }
+}
+
+function generateSummary() {
+  if (!currentPhone || Object.keys(allResults).length === 0) return;
+  var summary = document.getElementById('summaryContent');
+  var riskLevel = t('risk_low');
+  var riskColor = '#3fb950';
+  var riskReasons = [];
+
+  var socialCount = 0, callCount = 0, smsCount = 0, locationCount = 0;
+
+  var allNames = Object.keys(API_ENDPOINTS.social.concat(API_ENDPOINTS.calls).concat(API_ENDPOINTS.sms).concat(API_ENDPOINTS.location));
+  // Count social
+  for (var j = 0; j < API_ENDPOINTS.social.length; j++) {
+    var name = API_ENDPOINTS.social[j].name;
+    if (allResults[name] && allResults[name].success) socialCount++;
+  }
+  // Count calls
+  for (var j = 0; j < API_ENDPOINTS.calls.length; j++) {
+    var name = API_ENDPOINTS.calls[j].name;
+    if (allResults[name] && allResults[name].success) callCount++;
+  }
+  // Count sms
+  for (var j = 0; j < API_ENDPOINTS.sms.length; j++) {
+    var name = API_ENDPOINTS.sms[j].name;
+    if (allResults[name] && allResults[name].success) smsCount++;
+  }
+  // Count location
+  for (var j = 0; j < API_ENDPOINTS.location.length; j++) {
+    var name = API_ENDPOINTS.location[j].name;
+    if (allResults[name] && allResults[name].success) locationCount++;
+  }
+
+  if (socialCount > 2) riskReasons.push('Multiple social media accounts detected');
+  if (callCount > 0) riskReasons.push('Active call records found');
+  if (smsCount > 0) riskReasons.push('SMS activity detected');
+  if (locationCount > 1) riskReasons.push('Location data available from multiple sources');
+
+  if (riskReasons.length >= 3) { riskLevel = t('risk_high'); riskColor = '#f85149'; }
+  else if (riskReasons.length >= 1) { riskLevel = t('risk_medium'); riskColor = '#d29922'; }
+
+  var vals = Object.values(allResults);
+  var successCount = 0;
+  for (var i = 0; i < vals.length; i++) {
+    if (vals[i].success) successCount++;
+  }
+  var totalKeys = Object.keys(allResults).length;
+
+  var riskHtml = '';
+  if (riskReasons.length > 0) {
+    riskHtml = '<div style="margin-bottom:12px"><strong>' + t('summary_header') + ':</strong></div><ul style="margin-left:20px;line-height:2">';
+    for (var i = 0; i < riskReasons.length; i++) {
+      riskHtml += '<li>' + riskReasons[i] + '</li>';
+    }
+    riskHtml += '</ul>';
+  }
+
+  summary.innerHTML =
+    '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">' +
+    '<div style="padding:8px 20px;border-radius:20px;background:' + riskColor + '20;border:1px solid ' + riskColor + ';color:' + riskColor + ';font-weight:600;font-size:14px">' + riskLevel + '</div>' +
+    '<div style="font-size:12px;color:#8b949e">' + t('risk_assessment') + '</div>' +
+    '</div>' +
+    '<div style="margin-bottom:12px"><strong>Number:</strong> ' + currentPhone + '</div>' +
+    riskHtml +
+    '<div style="margin-top:12px;padding-top:12px;border-top:1px solid #30363d;font-size:12px;color:#484f58">' + t('searching') + ' ' + totalKeys + ' APIs • ' + successCount + ' ' + t('success') + ' • ' + (totalKeys - successCount) + ' ' + t('fail') + '</div>';
+}
+
+function checkForLocation() {
+  var hasCoords = false;
+  var entries = Object.entries(allResults);
+  for (var i = 0; i < entries.length; i++) {
+    var name = entries[i][0];
+    var result = entries[i][1];
+    if (result.success && result.data) {
+      var data = result.data;
+      if ((data.lat && data.lng) || (data.latitude && data.longitude)) {
+        hasCoords = true;
+        break;
+      }
+    }
+  }
+  if (hasCoords) {
+    document.getElementById('mapContainer').classList.add('active');
+    initMap();
+  }
+}
+
+function initMap() {
+  var container = document.getElementById('map');
+  container.innerHTML = '<iframe width="100%" height="100%" frameborder="0" style="border:0" src="https://www.openstreetmap.org/export/embed.html?layer=mapnik&marker=9.0579,7.4951" allowfullscreen></iframe>';
+}
+
+function generatePDF() {
+  if (!currentPhone || Object.keys(allResults).length === 0) {
+    alert('No data to export. Run an investigation first.');
+    return;
+  }
+  var report = 'DSS INTELLIGENCE REPORT\n';
+  report += '=======================\n';
+  report += 'Target: ' + currentPhone + '\n';
+  report += 'Date: ' + new Date().toISOString() + '\n';
+  var vals = Object.values(allResults);
+  var successCount = 0;
+  for (var i = 0; i < vals.length; i++) { if (vals[i].success) successCount++; }
+  var totalKeys = Object.keys(allResults).length;
+  report += 'APIs Queried: ' + totalKeys + '\n';
+  report += 'Successful: ' + successCount + '\n';
+  report += 'Failed: ' + (totalKeys - successCount) + '\n\n';
+  report += '--- RESULTS ---\n\n';
+  var entries = Object.entries(allResults);
+  for (var i = 0; i < entries.length; i++) {
+    report += entries[i][0] + ':\n';
+    report += entries[i][1].success ? JSON.stringify(entries[i][1].data, null, 2) : 'Error: ' + entries[i][1].error;
+    report += '\n\n---\n\n';
+  }
+  var blob = new Blob([report], {type:'text/plain'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'DSS_Report_' + currentPhone + '_' + Date.now() + '.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function downloadJSON() {
+  if (!currentPhone || Object.keys(allResults).length === 0) {
+    alert('No data to export.');
+    return;
+  }
+  var vals = Object.values(allResults);
+  var successCount = 0;
+  for (var i = 0; i < vals.length; i++) { if (vals[i].success) successCount++; }
+  var totalKeys = Object.keys(allResults).length;
+  var exportData = {
+    report:{
+      target:currentPhone,
+      timestamp:new Date().toISOString(),
+      apis_queried:totalKeys,
+      successful:successCount,
+      failed:totalKeys - successCount
+    },
+    results:allResults
+  };
+  var blob = new Blob([JSON.stringify(exportData, null, 2)], {type:'application/json'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'DSS_Data_' + currentPhone + '_' + Date.now() + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function clearResults() {
+  allResults = {};
+  currentPhone = '';
+  document.getElementById('resultsContainer').classList.remove('active');
+  document.getElementById('statsGrid').style.display = 'none';
+  document.getElementById('phoneInput').value = '';
+  document.getElementById('apiResults').innerHTML = '';
+  document.getElementById('summaryContent').textContent = 'No data available yet. Run an investigation to generate summary.';
+  document.getElementById('mapContainer').classList.remove('active');
+}
+
+document.getElementById('phoneInput').addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') startInvestigation();
+});
+</script>
+</body>
+</html>
