@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>DSS Email Intelligence System v2.0</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#0a0e17;color:#e0e6ed;min-height:100vh}
+.container{max-width:1400px;margin:0 auto;padding:20px}
+.header{background:linear-gradient(135deg,#0d1117 0%,#161b22 100%);border-bottom:1px solid #30363d;padding:15px 0;position:sticky;top:0;z-index:100}
+.header-content{display:flex;align-items:center;justify-content:space-between;max-width:1400px;margin:0 auto;padding:0 20px}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-icon{width:40px;height:40px;background:linear-gradient(135deg,#f0883e,#d29922);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:bold}
+.logo-text{font-size:20px;font-weight:600;background:linear-gradient(135deg,#f0883e,#d29922);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header-badge{background:#21262d;border:1px solid #30363d;border-radius:6px;padding:6px 12px;font-size:12px;color:#8b949e}
+.search-section{background:linear-gradient(135deg,#161b22 0%,#1c2128 100%);border:1px solid #30363d;border-radius:12px;padding:30px;margin:20px 0}
+.search-title{font-size:18px;font-weight:600;margin-bottom:20px;color:#c9d1d9}
+.search-box{display:flex;gap:12px;flex-wrap:wrap}
+.search-input{flex:1;min-width:280px;padding:14px 18px;background:#0d1117;border:2px solid #30363d;border-radius:8px;color:#e0e6ed;font-size:16px;transition:all 0.3s}
+.search-input:focus{border-color:#f0883e;outline:none;box-shadow:0 0 0 3px rgba(240,136,62,0.15)}
+.search-btn{padding:14px 32px;background:linear-gradient(135deg,#d29922,#f0883e);border:none;border-radius:8px;color:#fff;font-size:16px;font-weight:600;cursor:pointer;transition:all 0.3s}
+.search-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(240,136,62,0.3)}
+.search-btn:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+.password-hint{font-size:11px;color:#484f58;margin-top:8px;font-family:monospace}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:20px 0}
+.stat-card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px}
+.stat-label{font-size:12px;color:#8b949e;text-transform:uppercase;letter-spacing:0.5px}
+.stat-value{font-size:24px;font-weight:700;color:#c9d1d9;margin-top:4px}
+.stat-value.active{color:#3fb950}
+.stat-value.error{color:#f85149}
+.stat-value.warning{color:#d29922}
+.results-container{display:none}
+.results-container.active{display:block}
+.results-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.results-title{font-size:18px;font-weight:600;color:#c9d1d9}
+.results-actions{display:flex;gap:8px}
+.action-btn{padding:8px 16px;border-radius:6px;border:1px solid #30363d;background:#21262d;color:#c9d1d9;font-size:13px;cursor:pointer;transition:all 0.2s}
+.action-btn:hover{background:#30363d}
+.action-btn.primary{background:#1f6feb;border-color:#1f6feb;color:#fff}
+.action-btn.primary:hover{background:#388bfd}
+.action-btn.danger{background:#da3633;border-color:#da3633;color:#fff}
+.action-btn.danger:hover{background:#f85149}
+.api-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px;margin-bottom:20px}
+.api-card{background:#161b22;border:1px solid #30363d;border-radius:8px;overflow:hidden;transition:all 0.3s}
+.api-card:hover{border-color:#f0883e}
+.api-card.breach{border-color:#f85149;background:rgba(248,81,73,0.05)}
+.api-card-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #30363d;cursor:pointer}
+.api-card-header h3{font-size:14px;font-weight:600;color:#c9d1d9}
+.api-card-header .badge{font-size:10px;padding:2px 8px;border-radius:10px;background:#21262d;color:#8b949e;margin-left:8px}
+.api-card-header .badge.breach{background:rgba(248,81,73,0.2);color:#f85149}
+.api-status{width:8px;height:8px;border-radius:50%}
+.api-status.success{background:#3fb950;box-shadow:0 0 6px rgba(63,185,80,0.4)}
+.api-status.error{background:#f85149;box-shadow:0 0 6px rgba(248,81,73,0.4)}
+.api-status.loading{background:#d29922;animation:pulse 1.5s infinite}
+.api-status.warning{background:#d29922;box-shadow:0 0 6px rgba(210,153,34,0.4)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.api-card-body{padding:16px;display:none}
+.api-card-body.active{display:block}
+.api-data{padding:12px;background:#0d1117;border-radius:6px;font-family:monospace;font-size:12px;line-height:1.6;color:#8b949e;white-space:pre-wrap;word-break:break-word;max-height:200px;overflow-y:auto}
+.api-data.highlight{color:#c9d1d9}
+.api-data.breach-text{color:#f85149}
+.breach-alert{padding:12px;background:rgba(248,81,73,0.1);border:1px solid rgba(248,81,73,0.3);border-radius:8px;margin:12px 0;display:flex;align-items:center;gap:10px}
+.breach-alert .alert-icon{font-size:24px}
+.breach-alert .alert-text{font-size:13px;color:#f85149}
+.breach-list{margin-top:12px}
+.breach-item{padding:8px 12px;background:#0d1117;border-left:3px solid #f85149;margin-bottom:6px;border-radius:0 4px 4px 0;font-size:12px;color:#c9d1d9}
+.breach-item .breach-name{color:#f85149;font-weight:600}
+.breach-item .breach-date{color:#8b949e;font-size:11px}
+.summary-section{background:linear-gradient(135deg,#161b22,#1c2128);border:1px solid #30363d;border-radius:12px;padding:24px;margin:20px 0}
+.summary-title{font-size:18px;font-weight:600;margin-bottom:16px;color:#c9d1d9}
+.summary-content{font-size:14px;line-height:1.8;color:#8b949e}
+.summary-content strong{color:#c9d1d9}
+.language-selector{display:flex;gap:8px;margin:16px 0}
+.lang-btn{padding:6px 14px;border-radius:4px;border:1px solid #30363d;background:transparent;color:#8b949e;font-size:12px;cursor:pointer;transition:all 0.2s}
+.lang-btn:hover{border-color:#f0883e;color:#f0883e}
+.lang-btn.active{background:#d29922;border-color:#d29922;color:#fff}
+.password-section{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:24px;margin:20px 0}
+.password-title{font-size:16px;font-weight:600;margin-bottom:16px;color:#c9d1d9}
+.password-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.password-card{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:16px}
+.password-card h4{font-size:13px;color:#8b949e;margin-bottom:8px}
+.password-card .password-value{font-family:monospace;font-size:14px;color:#c9d1d9;word-break:break-all}
+.password-card .password-status{font-size:12px;margin-top:8px}
+.password-card .password-status.exposed{color:#f85149}
+.password-card .password-status.safe{color:#3fb950}
+.password-card .password-status.unknown{color:#d29922}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center}
+.modal.active{display:flex}
+.modal-content{background:#161b22;border:1px solid #30363d;border-radius:12px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;padding:24px}
+.modal-title{font-size:18px;font-weight:600;margin-bottom:16px;color:#c9d1d9}
+.loading-spinner{display:flex;align-items:center;justify-content:center;padding:40px}
+.spinner{width:40px;height:40px;border:3px solid #30363d;border-top-color:#f0883e;border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tab-container{margin:20px 0}
+.tab-buttons{display:flex;gap:4px;margin-bottom:16px}
+.tab-btn{padding:10px 20px;border:1px solid #30363d;background:#0d1117;color:#8b949e;font-size:14px;cursor:pointer;border-radius:8px 8px 0 0;transition:all 0.2s}
+.tab-btn.active{background:#161b22;color:#c9d1d9;border-bottom-color:#161b22}
+.tab-btn:hover{background:#1c2128}
+.tab-content{display:none}
+.tab-content.active{display:block}
+@media(max-width:768px){.search-box{flex-direction:column}.search-input{min-width:auto}.api-grid{grid-template-columns:1fr}.tab-buttons{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+
+<div class="header">
+<div class="header-content">
+<div class="logo">
+<div class="logo-icon">E</div>
+<div class="logo-text">DSS Email Intelligence v2.0</div>
+</div>
+<div class="header-badge">SECURE • AUTHORIZED ACCESS ONLY</div>
+</div>
+</div>
+
+<div class="container">
+
+<div class="search-section">
+<div class="search-title">Email & Password Intelligence Search</div>
+<div class="search-box">
+<input type="email" class="search-input" id="emailInput" placeholder="Enter email address (e.g., target@email.com)">
+<button class="search-btn" id="searchBtn" onclick="startInvestigation()">Begin Investigation</button>
+</div>
+<div class="password-hint">Authentication: @dss/v1 • All requests are encrypted and logged</div>
+</div>
+
+<div class="stats-grid" id="statsGrid" style="display:none">
+<div class="stat-card"><div class="stat-label">APIs Queried</div><div class="stat-value" id="totalApis">0</div></div>
+<div class="stat-card"><div class="stat-label">Successful</div><div class="stat-value active" id="successCount">0</div></div>
+<div class="stat-card"><div class="stat-label">Failed</div><div class="stat-value error" id="failCount">0</div></div>
+<div class="stat-card"><div class="stat-label">Breaches Found</div><div class="stat-value warning" id="breachCount">0</div></div>
+<div class="stat-card"><div class="stat-label">Response Time</div><div class="stat-value" id="responseTime">0ms</div></div>
+</div>
+
+<div class="results-container" id="resultsContainer">
+<div class="results-header">
+<div class="results-title">Investigation Results: <span id="targetEmail" style="color:#f0883e"></span></div>
+<div class="results-actions">
+<button class="action-btn" onclick="generatePDF()">📄 Export PDF</button>
+<button class="action-btn" onclick="downloadJSON()">💾 Download JSON</button>
+<button class="action-btn danger" onclick="clearResults()">🗑 Clear All</button>
+</div>
+</div>
+
+<div class="language-selector" id="languageSelector">
+<button class="lang-btn active" onclick="setLanguage('english')">English</button>
+<button class="lang-btn" onclick="setLanguage('hausa')">Hausa</button>
+<button class="lang-btn" onclick="setLanguage('pidgin')">Pidgin</button>
+</div>
+
+<div class="tab-container">
+<div class="tab-buttons">
+<button class="tab-btn active" onclick="switchTab('email')">📧 Email Intelligence</button>
+<button class="tab-btn" onclick="switchTab('breaches')">🔓 Breach Analysis</button>
+<button class="tab-btn" onclick="switchTab('passwords')">🔑 Password Intelligence</button>
+<button class="tab-btn" onclick="switchTab('social')">🌐 Social Profiles</button>
+</div>
+
+<div class="tab-content active" id="tab-email">
+<div id="emailResults" class="api-grid"></div>
+</div>
+
+<div class="tab-content" id="tab-breaches">
+<div id="breachResults" class="api-grid"></div>
+</div>
+
+<div class="tab-content" id="tab-passwords">
+<div id="passwordResults" class="password-grid"></div>
+</div>
+
+<div class="tab-content" id="tab-social">
+<div id="socialResults" class="api-grid"></div>
+</div>
+</div>
+
+<div class="summary-section">
+<div class="summary-title">📋 Intelligence Summary</div>
+<div class="summary-content" id="summaryContent">No data available yet. Run an investigation to generate summary.</div>
+</div>
+</div>
+
+</div>
+
+<div class="modal" id="loadingModal">
+<div class="modal-content">
+<div class="modal-title">🔍 Investigation in Progress</div>
+<div class="loading-spinner"><div class="spinner"></div></div>
+<p style="text-align:center;color:#8b949e" id="loadingStatus">Querying email intelligence APIs and breach databases...</p>
+</div>
+</div>
+
+<script>
+const API_PASSWORD = '@dss/v1';
+const WORKER_URL = 'https://security.pages.dev/api/se.js';
+let currentEmail = '';
+let allResults = {};
+let language = 'english';
+
+const translations = {
+english:{searching:'Searching...',success:'Success',fail:'Failed',breach:'Data Breach Found',no_breach:'No Breaches Found',risk:'Risk Level',password_exposed:'Password Exposed in Breach',password_safe:'Password Not Found in Breaches',summary_header:'Email Intelligence Summary',risk_high:'HIGH RISK - Multiple Breaches Detected',risk_medium:'MEDIUM RISK - Some Activity Found',risk_low:'LOW RISK - Clean Record',social_found:'Social Profiles Found',social_none:'No Social Profiles Found'},
+hausa:{searching:'Ana bincike...',success:'Nasara',fail:'Kasa',breach:'An Samu Karya Tsaro',no_breach:'Babu Karya Tsaro',risk:'Matsayin Hadari',password_exposed:'An Fito da Password a Breach',password_safe:'Ba a Samu Password a Breach ba',summary_header:'Takaitaccen Bayanin Email',risk_high:'BABBAN HADARI - An Samu Breaches Da Yawa',risk_medium:'MATSAKAICI HADARI - An Samu Ayyuka',risk_low:'KANANAN HADARI - Babu Matsala',social_found:'An Samu Social Profiles',social_none:'Babu Social Profiles'},
+pidgin:{searching:'De search...',success:'Success',fail:'Fail',breach:'Breach Dey',no_breach:'No Breach',risk:'Level of Risk',password_exposed:'Password Dey for Breach o',password_safe:'No Password Found for Breach',summary_header:'Wetin We Find For Email',risk_high:'RISK HIGH - Plenty Breach Dey',risk_medium:'RISK MEDIUM - Some Tin Dey',risk_low:'RISK LOW - Clean',social_found:'Social Profile Dey',social_none:'No Social Profile'}
+};
+
+function t(key){return translations[language]?.[key]||key}
+
+function setLanguage(lang){
+language=lang;
+document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));
+document.querySelector(`.lang-btn[onclick="setLanguage('${lang}')"]`).classList.add('active');
+if(currentEmail) generateSummary();
+}
+
+function switchTab(tab){
+document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+document.querySelector(`.tab-btn[onclick*='${tab}']`).classList.add('active');
+document.getElementById(`tab-${tab}`).classList.add('active');
+}
+
+const API_ENDPOINTS = {
+email_intel:[
+{name:'Hunter.io',url:'https://api.hunter.io/v2/email-verifier?email={email}&api_key=hunter_demo_key',method:'GET',category:'email'},
+{name:'EmailRep',url:'https://emailrep.io/{email}',method:'GET',category:'email'},
+{name:'FullContact',url:'https://api.fullcontact.com/v3/person.enrich?email={email}',method:'GET',category:'email'},
+{name:'Clearbit',url:'https://person.clearbit.com/v1/people/email/{email}',method:'GET',category:'email'},
+{name:'Pipl',url:'https://pipl.com/api/v4/person/?email={email}&key=demo',method:'GET',category:'email'},
+{name:'SocialLinks',url:'https://api.sociallinks.io/v1/email/{email}',method:'GET',category:'email'}
+],
+breaches:[
+{name:'HaveIBeenPwned',url:'https://haveibeenpwned.com/api/v3/breachedaccount/{email}',method:'GET',category:'breach'},
+{name:'LeakCheck',url:'https://leakcheck.io/api/public?check={email}',method:'GET',category:'breach'},
+{name:'DeHashed',url:'https://dehashed.com/search?query={email}',method:'GET',category:'breach'},
+{name:'Snusbase',url:'https://snusbase.com/search?query={email}',method:'GET',category:'breach'},
+{name:'IntelligenceX',url:'https://intelx.io/search?q={email}',method:'GET',category:'breach'},
+{name:'BreachDirectory',url:'https://breachdirectory.org/api/v1/search?email={email}',method:'GET',category:'breach'},
+{name:'ScatteredSecrets',url:'https://scatteredsecrets.com/api/search?q={email}',method:'GET',category:'breach'},
+{name:'WildSearch',url:'https://wildsearch.org/api/search?q={email}',method:'GET',category:'breach'}
+],
+passwords:[
+{name:'HaveIBeenPwned Password',url:'https://haveibeenpwned.com/api/v3/pwnedpassword/{password}',method:'GET',category:'password'},
+{name:'CrackStation',url:'https://crackstation.net/api',method:'POST',category:'password'},
+{name:'Hashkiller',url:'https://hashkiller.io/api',method:'GET',category:'password'},
+{name:'OnlineHashCrack',url:'https://onlinehashcrack.com/api',method:'POST',category:'password'}
+],
+social_profiles:[
+{name:'Facebook Search',url:'https://graph.facebook.com/v18.0/search?q={email}&type=user',method:'GET',category:'social'},
+{name:'Instagram Search',url:'https://www.instagram.com/web/search/topsearch/?query={email}',method:'GET',category:'social'},
+{name:'Twitter/X Search',url:'https://api.twitter.com/2/users/by/email/{email}',method:'GET',category:'social'},
+{name:'LinkedIn Search',url:'https://www.linkedin.com/search/results/people/?keywords={email}',method:'GET',category:'social'},
+{name:'Google Accounts',url:'https://accounts.google.com/identify?email={email}',method:'GET',category:'social'},
+{name:'GitHub Search',url:'https://api.github.com/search/users?q={email}',method:'GET',category:'social'},
+{name:'Telegram Search',url:'https://t.me/search?q={email}',method:'GET',category:'social'},
+{name:'Gravatar',url:'https://www.gravatar.com/avatar/hash?email={email}',method:'GET',category:'social'}
+],
+telegram_bots:[
+{name:'Email Lookup Bot','bot':'@EmailLookupBot',category:'email'},
+{name:'LeakCheck Bot','bot':'@LeakCheckBot',category:'breach'},
+{name:'HIBP Bot','bot':'@HIBPBot',category:'breach'},
+{name:'Email Spy Bot','bot':'@EmailSpyBot',category:'social'},
+{name:'Password Check Bot','bot':'@PasswordCheckBot',category:'password'}
+]
+};
+
+async function queryAPI(endpoint, email){
+const url = endpoint.url.replace('{email}', encodeURIComponent(email)).replace('{password}', email);
+const startTime = Date.now();
+try{
+const response = await fetch(WORKER_URL, {
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({
+password:API_PASSWORD,
+type:'api',
+target:url,
+method:endpoint.method||'GET',
+name:endpoint.name,
+category:endpoint.category
+})
+});
+const data = await response.json();
+return{success:true,data:data.data||data,time:Date.now()-startTime};
+}catch(e){
+return{success:false,error:e.message,time:Date.now()-startTime};
+}
+}
+
+async function queryTelegramBot(bot, email){
+const startTime = Date.now();
+try{
+const response = await fetch(WORKER_URL, {
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({
+password:API_PASSWORD,
+type:'telegram',
+bot:bot.bot,
+email:email,
+name:bot.name,
+category:bot.category
+})
+});
+const data = await response.json();
+return{success:true,data:data.data||data,time:Date.now()-startTime};
+}catch(e){
+return{success:false,error:e.message,time:Date.now()-startTime};
+}
+}
+
+async function startInvestigation(){
+const email = document.getElementById('emailInput').value.trim();
+if(!email || !email.includes('@')){
+alert('Please enter a valid email address');
+return;
+}
+
+currentEmail = email;
+document.getElementById('targetEmail').textContent = email;
+document.getElementById('searchBtn').disabled = true;
+document.getElementById('searchBtn').textContent = '⏳ Investigating...';
+document.getElementById('loadingModal').classList.add('active');
+document.getElementById('resultsContainer').classList.remove('active');
+document.getElementById('statsGrid').style.display = 'none';
+allResults = {};
+
+let total = 0, success = 0, fail = 0, breaches = 0;
+let totalTime = 0;
+const resultsByCategory = {email:[],breach:[],password:[],social:[]};
+
+const allApis = [
+...API_ENDPOINTS.email_intel,
+...API_ENDPOINTS.breaches,
+...API_ENDPOINTS.passwords,
+...API_ENDPOINTS.social_profiles,
+...API_ENDPOINTS.telegram_bots
+];
+
+for(const api of allApis){
+total++;
+document.getElementById('loadingStatus').textContent = `Querying ${api.name}...`;
+
+let result;
+if(api.bot){
+result = await queryTelegramBot(api, email);
+} else {
+result = await queryAPI(api, email);
+}
+
+totalTime += result.time;
+if(result.success){
+success++;
+if(result.data && result.data.breaches) breaches = result.data.breaches.length;
+if(api.category === 'breach' && result.success) breaches++;
+} else {
+fail++;
+}
+
+const cat = api.category || 'email';
+if(resultsByCategory[cat]) resultsByCategory[cat].push({...api, result});
+
+allResults[api.name] = result;
+
+document.getElementById('totalApis').textContent = total;
+document.getElementById('successCount').textContent = success;
+document.getElementById('failCount').textContent = fail;
+document.getElementById('breachCount').textContent = breaches;
+document.getElementById('responseTime').textContent = `${Math.round(totalTime/total)}ms`;
+}
+
+document.getElementById('loadingModal').classList.remove('active');
+document.getElementById('statsGrid').style.display = 'grid';
+document.getElementById('resultsContainer').classList.add('active');
+document.getElementById('searchBtn').disabled = false;
+document.getElementById('searchBtn').textContent = '🔍 Begin Investigation';
+
+renderEmailResults(resultsByCategory.email);
+renderBreachResults(resultsByCategory.breach);
+renderPasswordResults(resultsByCategory.password);
+renderSocialResults(resultsByCategory.social);
+generateSummary();
+}
+
+function renderEmailResults(apis){
+const container = document.getElementById('emailResults');
+container.innerHTML = '';
+if(!apis.length){container.innerHTML='<div style="color:#8b949e">No email intelligence data available</div>';return;}
+for(const api of apis){
+const card = document.createElement('div');
+card.className = 'api-card';
+const header = document.createElement('div');
+header.className = 'api-card-header';
+header.onclick=function(){this.nextElementSibling.classList.toggle('active')};
+header.innerHTML=`<h3>${api.name}</h3>`;
+const status=document.createElement('div');
+status.className=`api-status ${api.result.success?'success':'error'}`;
+header.appendChild(status);
+card.appendChild(header);
+const body=document.createElement('div');
+body.className='api-card-body';
+const dataDiv=document.createElement('div');
+dataDiv.className='api-data highlight';
+dataDiv.textContent=api.result.success?JSON.stringify(api.result.data,null,2):`Error: ${api.result.error||'Request failed'}`;
+if(!api.result.success) dataDiv.style.color='#f85149';
+body.appendChild(dataDiv);
+card.appendChild(body);
+container.appendChild(card);
+}
+}
+
+function renderBreachResults(apis){
+const container = document.getElementById('breachResults');
+container.innerHTML = '';
+if(!apis.length){container.innerHTML='<div style="color:#8b949e">No breach data available</div>';return;}
+let totalBreaches = 0;
+for(const api of apis){
+if(api.result.success && api.result.data){
+const breaches = api.result.data.breaches || [];
+totalBreaches += breaches.length;
+}
+}
+if(totalBreaches > 0){
+const alert = document.createElement('div');
+alert.className = 'breach-alert';
+alert.innerHTML = `<span class="alert-icon">🔴</span><span class="alert-text"><strong>ALERT:</strong> ${totalBreaches} data breach(es) detected for this email across multiple databases!</span>`;
+container.appendChild(alert);
+}
+for(const api of apis){
+const card = document.createElement('div');
+card.className = `api-card ${api.result.success ? 'breach' : ''}`;
+const header = document.createElement('div');
+header.className = 'api-card-header';
+header.onclick=function(){this.nextElementSibling.classList.toggle('active')};
+header.innerHTML=`<h3>${api.name}</h3>`;
+const status=document.createElement('div');
+status.className=`api-status ${api.result.success?'warning':'error'}`;
+header.appendChild(status);
+card.appendChild(header);
+const body=document.createElement('div');
+body.className='api-card-body';
+const dataDiv=document.createElement('div');
+if(api.result.success && api.result.data && api.result.data.breaches){
+dataDiv.className='api-data breach-text';
+dataDiv.textContent=JSON.stringify(api.result.data.breaches,null,2);
+} else if(api.result.success){
+dataDiv.className='api-data';
+dataDiv.textContent=JSON.stringify(api.result.data,null,2);
+} else {
+dataDiv.className='api-data';
+dataDiv.style.color='#f85149';
+dataDiv.textContent=`Error: ${api.result.error||'Request failed'}`;
+}
+body.appendChild(dataDiv);
+card.appendChild(body);
+container.appendChild(card);
+}
+}
+
+function renderPasswordResults(apis){
+const container = document.getElementById('passwordResults');
+container.innerHTML = '';
+if(!apis.length){container.innerHTML='<div style="color:#8b949e">No password intelligence data available</div>';return;}
+for(const api of apis){
+const card = document.createElement('div');
+card.className = 'password-card';
+const status = api.result.success ? 'exposed' : 'unknown';
+const statusText = api.result.success ? t('password_exposed') : t('password_safe');
+card.innerHTML = `
+<h4>${api.name}</h4>
+<div class="password-value">${api.result.success ? 'Password hash/data found' : 'No password data'}</div>
+<div class="password-status ${status}">${statusText}</div>
+`;
+container.appendChild(card);
+}
+}
+
+function renderSocialResults(apis){
+const container = document.getElementById('socialResults');
+container.innerHTML = '';
+if(!apis.length){container.innerHTML='<div style="color:#8b949e">No social profile data available</div>';return;}
+for(const api of apis){
+const card = document.createElement('div');
+card.className = 'api-card';
+const header = document.createElement('div');
+header.className = 'api-card-header';
+header.onclick=function(){this.nextElementSibling.classList.toggle('active')};
+header.innerHTML=`<h3>${api.name}</h3>`;
+const status=document.createElement('div');
+status.className=`api-status ${api.result.success?'success':'error'}`;
+header.appendChild(status);
+card.appendChild(header);
+const body=document.createElement('div');
+body.className='api-card-body';
+const dataDiv=document.createElement('div');
+dataDiv.className='api-data highlight';
+dataDiv.textContent=api.result.success?JSON.stringify(api.result.data,null,2):`Error: ${api.result.error||'Request failed'}`;
+if(!api.result.success) dataDiv.style.color='#f85149';
+body.appendChild(dataDiv);
+card.appendChild(body);
+container.appendChild(card);
+}
+}
+
+function generateSummary(){
+if(!currentEmail || Object.keys(allResults).length === 0) return;
+const summary = document.getElementById('summaryContent');
+let breachCount = 0;
+let socialCount = 0;
+for(const [name, result] of Object.entries(allResults)){
+if(result.success && result.data){
+if(result.data.breaches) breachCount += result.data.breaches.length;
+if(name.includes('Facebook')||name.includes('Instagram')||name.includes('LinkedIn')||name.includes('Twitter')) socialCount++;
+}
+}
+let riskLevel, riskColor;
+if(breachCount >= 3){riskLevel=t('risk_high');riskColor='#f85149';}
+else if(breachCount >= 1){riskLevel=t('risk_medium');riskColor='#d29922';}
+else{riskLevel=t('risk_low');riskColor='#3fb950';}
+summary.innerHTML = `
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+<div style="padding:8px 20px;border-radius:20px;background:${riskColor}20;border:1px solid ${riskColor};color:${riskColor};font-weight:600;font-size:14px">${riskLevel}</div>
+<div style="font-size:12px;color:#8b949e">Risk Assessment</div>
+</div>
+<div style="margin-bottom:12px"><strong>Email:</strong> ${currentEmail}</div>
+<div style="margin-bottom:12px"><strong>Data Breaches Found:</strong> ${breachCount}</div>
+<div style="margin-bottom:12px"><strong>Social Profiles Found:</strong> ${socialCount > 0 ? t('social_found') : t('social_none')}</div>
+<div style="margin-top:12px;padding-top:12px;border-top:1px solid #30363d;font-size:12px;color:#484f58">
+${t('searching')} ${Object.keys(allResults).length} APIs • ${Object.values(allResults).filter(v=>v.success).length} ${t('success')} • ${Object.values(allResults).filter(v=>!v.success).length} ${t('fail')}
+</div>
+`;
+}
+
+function generatePDF(){
+if(!currentEmail || Object.keys(allResults).length === 0){alert('No data to export.');return;}
+let report = `DSS EMAIL INTELLIGENCE REPORT\n================================\nTarget: ${currentEmail}\nDate: ${new Date().toISOString()}\nAPIs Queried: ${Object.keys(allResults).length}\n\n--- RESULTS ---\n\n`;
+for(const[name,result] of Object.entries(allResults)){
+report+=`${name}:\n${result.success?JSON.stringify(result.data,null,2):`Error: ${result.error}`}\n\n---\n\n`;
+}
+const blob=new Blob([report],{type:'text/plain'});
+const url=URL.createObjectURL(blob);
+const a=document.createElement('a');
+a.href=url;
+a.download=`DSS_Email_Report_${currentEmail}_${Date.now()}.txt`;
+a.click();
+URL.revokeObjectURL(url);
+}
+
+function downloadJSON(){
+if(!currentEmail || Object.keys(allResults).length === 0){alert('No data to export.');return;}
+const exportData={report:{target:currentEmail,timestamp:new Date().toISOString(),apis_queried:Object.keys(allResults).length},results:allResults};
+const blob=new Blob([JSON.stringify(exportData,null,2)],{type:'application/json'});
+const url=URL.createObjectURL(blob);
+const a=document.createElement('a');
+a.href=url;
+a.download=`DSS_Email_Data_${currentEmail}_${Date.now()}.json`;
+a.click();
+URL.revokeObjectURL(url);
+}
+
+function clearResults(){
+allResults={};currentEmail='';
+document.getElementById('resultsContainer').classList.remove('active');
+document.getElementById('statsGrid').style.display='none';
+document.getElementById('emailInput').value='';
+document.querySelectorAll('.api-grid').forEach(g=>g.innerHTML='');
+document.querySelectorAll('.password-grid').forEach(g=>g.innerHTML='');
+document.getElementById('summaryContent').textContent='No data available yet. Run an investigation to generate summary.';
+}
+
+document.getElementById('emailInput').addEventListener('keypress',function(e){if(e.key==='Enter')startInvestigation()});
+</script>
+</body>
+</html>
